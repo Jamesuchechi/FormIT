@@ -11,6 +11,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { updateForm, type FormRecord, type FormSettings } from "../../lib/api.ts";
 import type { BuilderActions, BuilderState, BuilderTab } from "./types.ts";
 
+function getFormSnapshot(schema: FormSchema, form: FormRecord): string {
+  return JSON.stringify({
+    title: schema.title,
+    description: schema.description,
+    sections: schema.sections,
+    settings: form.settings,
+    status: form.status,
+    opensAt: form.opensAt,
+    closesAt: form.closesAt,
+  });
+}
+
 export function useBuilderState(
   initialForm: FormRecord,
 ): { state: BuilderState; actions: BuilderActions } {
@@ -33,7 +45,12 @@ export function useBuilderState(
   const [history, setHistory] = useState<FormSchema[]>([initialForm.schema]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  const isInitialMount = useRef(true);
+  // Snapshot tracking for true dirty checking
+  const lastSavedSnapshotRef = useRef<string>(getFormSnapshot(initialForm.schema, initialForm));
+
+  // Determine if there are actual unsaved user modifications
+  const currentSnapshot = getFormSnapshot(schema, form);
+  const hasUnsavedChanges = currentSnapshot !== lastSavedSnapshotRef.current;
 
   // Push new schema to undo stack
   const commitSchema = useCallback(
@@ -51,10 +68,9 @@ export function useBuilderState(
     [historyIndex],
   );
 
-  // Debounced autosave to Supabase
+  // Debounced autosave to Supabase (only when there are actual unsaved changes)
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
+    if (!hasUnsavedChanges) {
       return;
     }
 
@@ -62,15 +78,18 @@ export function useBuilderState(
       setIsSaving(true);
       setSaveError(null);
       try {
+        const cleanTitle = (schema.title || "").trim();
         const updated = await updateForm(form.id, {
-          title: schema.title,
+          title: cleanTitle.length > 0 ? cleanTitle : "Untitled form",
           schema,
           settings: form.settings,
           status: form.status,
-          slug: form.slug,
-          opensAt: form.opensAt,
-          closesAt: form.closesAt,
+          opensAt: form.opensAt || null,
+          closesAt: form.closesAt || null,
         });
+
+        // Advance the baseline snapshot to the saved state
+        lastSavedSnapshotRef.current = getFormSnapshot(updated.schema, updated);
         setForm(updated);
         setLastSaved(new Date());
       } catch (err: unknown) {
@@ -79,10 +98,10 @@ export function useBuilderState(
       } finally {
         setIsSaving(false);
       }
-    }, 800);
+    }, 1000);
 
     return () => clearTimeout(timer);
-  }, [schema, form.settings, form.status, form.slug, form.opensAt, form.closesAt, form.id]);
+  }, [hasUnsavedChanges, schema, form]);
 
   const selectField = useCallback((fieldId: string | null, sectionId?: string | null) => {
     setSelectedFieldId(fieldId);
@@ -358,21 +377,22 @@ export function useBuilderState(
   const saveNow = useCallback(async () => {
     setIsSaving(true);
     try {
+      const cleanTitle = (schema.title || "").trim();
       const updated = await updateForm(form.id, {
-        title: schema.title,
+        title: cleanTitle.length > 0 ? cleanTitle : "Untitled form",
         schema,
         settings: form.settings,
         status: form.status,
-        slug: form.slug,
-        opensAt: form.opensAt,
-        closesAt: form.closesAt,
+        opensAt: form.opensAt || null,
+        closesAt: form.closesAt || null,
       });
+      lastSavedSnapshotRef.current = getFormSnapshot(updated.schema, updated);
       setForm(updated);
       setLastSaved(new Date());
     } finally {
       setIsSaving(false);
     }
-  }, [form, schema]);
+  }, [form.id, form.settings, form.status, form.opensAt, form.closesAt, schema]);
 
   return {
     state: {
@@ -382,6 +402,7 @@ export function useBuilderState(
       selectedSectionId,
       activeTab,
       isSaving,
+      hasUnsavedChanges,
       lastSaved,
       saveError,
       canUndo: historyIndex > 0,

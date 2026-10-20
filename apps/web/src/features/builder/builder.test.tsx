@@ -235,4 +235,37 @@ describe("Builder - UI Components", () => {
     expect(screen.getByText("f_comment")).toBeInTheDocument();
     expect(screen.getByText("Paragraph Bounds")).toBeInTheDocument();
   });
+
+  it("accurately tracks unsaved changes and displays correct status in header", () => {
+    const { result } = renderHook(() => useBuilderState(mockFormRecord));
+
+    // Initially clean
+    expect(result.current.state.hasUnsavedChanges).toBe(false);
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <BuilderHeader state={result.current.state} actions={result.current.actions} />
+      </MemoryRouter>,
+    );
+
+    // Shows Saved when clean
+    expect(screen.getByText("Saved")).toBeInTheDocument();
+    expect(screen.queryByText("Unsaved changes")).not.toBeInTheDocument();
+
+    // User types / updates title
+    act(() => {
+      result.current.actions.updateTitle("Brand New Title");
+    });
+
+    expect(result.current.state.hasUnsavedChanges).toBe(true);
+
+    rerender(
+      <MemoryRouter>
+        <BuilderHeader state={result.current.state} actions={result.current.actions} />
+      </MemoryRouter>,
+    );
+
+    // Shows Unsaved changes
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
+  });
 });

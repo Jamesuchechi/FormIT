@@ -23,7 +23,17 @@ interface BuilderHeaderProps {
 }
 
 export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
-  const { form, schema, activeTab, isSaving, lastSaved, canUndo, canRedo } = state;
+  const {
+    form,
+    schema,
+    activeTab,
+    isSaving,
+    hasUnsavedChanges,
+    lastSaved,
+    saveError,
+    canUndo,
+    canRedo,
+  } = state;
   const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -143,15 +153,30 @@ export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
             className="hidden lg:flex items-center gap-1.5 text-xs text-neutral-500"
             title={lastSaved ? `Last saved at ${lastSaved.toLocaleTimeString()}` : undefined}
           >
-            {isSaving ? (
+            {saveError ? (
+              <button
+                type="button"
+                onClick={() => void actions.saveNow()}
+                className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 hover:underline cursor-pointer"
+                title={saveError}
+              >
+                <span className="h-2 w-2 rounded-full bg-red-500" />
+                <span>Save failed · Retry</span>
+              </button>
+            ) : isSaving ? (
               <>
-                <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
-                <span>Saving...</span>
+                <Loader2 className="h-3 w-3 animate-spin text-indigo-600" />
+                <span className="font-medium text-neutral-600">Saving...</span>
+              </>
+            ) : hasUnsavedChanges ? (
+              <>
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-amber-700 font-medium">Unsaved changes</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                <span>Saved</span>
+                <span className="text-neutral-600">Saved</span>
               </>
             )}
           </div>

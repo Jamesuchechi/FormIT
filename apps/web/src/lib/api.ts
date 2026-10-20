@@ -1,5 +1,5 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { parseFormSchema, type FileAnswer, type FormSchema } from "@formit/schema";
+import { isValidSlug, parseFormSchema, type FileAnswer, type FormSchema } from "@formit/schema";
 import { ApiError } from "./errors.ts";
 import { supabase } from "./supabase.ts";
 
@@ -241,13 +241,53 @@ export async function updateForm(
   },
 ): Promise<FormRecord> {
   const patch: Record<string, unknown> = {};
-  if (updates.title !== undefined) patch.title = updates.title;
-  if (updates.slug !== undefined) patch.slug = updates.slug;
-  if (updates.schema !== undefined) patch.schema = updates.schema;
-  if (updates.settings !== undefined) patch.settings = updates.settings;
-  if (updates.status !== undefined) patch.status = updates.status;
-  if (updates.opensAt !== undefined) patch.opens_at = updates.opensAt;
-  if (updates.closesAt !== undefined) patch.closes_at = updates.closesAt;
+
+  if (updates.title !== undefined) {
+    const cleanTitle = updates.title.trim();
+    // Guard against check constraint: char_length(title) between 1 and 200
+    patch.title = cleanTitle.length > 0 ? cleanTitle.slice(0, 200) : "Untitled form";
+  }
+
+  if (updates.slug !== undefined) {
+    const cleanSlug = updates.slug.trim().toLowerCase();
+    // Guard against check constraint: slug ~ '^[a-z0-9][a-z0-9-]{2,62}$'
+    if (isValidSlug(cleanSlug)) {
+      patch.slug = cleanSlug;
+    }
+  }
+
+  if (updates.schema !== undefined) {
+    patch.schema = updates.schema;
+  }
+
+  if (updates.settings !== undefined) {
+    patch.settings = updates.settings;
+  }
+
+  if (updates.status !== undefined) {
+    // Guard against check constraint: status in ('draft', 'open', 'closed')
+    if (["draft", "open", "closed"].includes(updates.status)) {
+      patch.status = updates.status;
+    }
+  }
+
+  // Guard against scheduling constraints: opens_at < closes_at
+  if (updates.opensAt !== undefined) {
+    patch.opens_at = updates.opensAt ? updates.opensAt : null;
+  }
+  if (updates.closesAt !== undefined) {
+    patch.closes_at = updates.closesAt ? updates.closesAt : null;
+  }
+
+  if (patch.opens_at && patch.closes_at) {
+    const openTime = new Date(patch.opens_at as string).getTime();
+    const closeTime = new Date(patch.closes_at as string).getTime();
+    if (!isNaN(openTime) && !isNaN(closeTime) && openTime >= closeTime) {
+      delete patch.closes_at;
+    }
+  }
+
+  patch.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("forms")

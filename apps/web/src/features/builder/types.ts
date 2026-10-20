@@ -10,6 +10,7 @@ export interface BuilderState {
   selectedSectionId: string | null;
   activeTab: BuilderTab;
   isSaving: boolean;
+  hasUnsavedChanges: boolean;
   lastSaved: Date | null;
   saveError: string | null;
   canUndo: boolean;
