@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useSession } from "../features/auth/useSession.ts";
 import { FormFiller } from "../features/renderer/FormFiller.tsx";
 import { defaultFillApi, getPublicForm } from "../lib/api.ts";
@@ -30,6 +30,7 @@ export function FillPage() {
     queryFn: () => getPublicForm(slug),
     enabled: valid,
   });
+  const location = useLocation();
   const { session, loading: sessionLoading } = useSession();
 
   let content: ReactNode;
@@ -56,12 +57,23 @@ export function FillPage() {
       </div>
     );
   } else if (form.requireSignIn && !session) {
-    // TODO(auth): link to the sign-in page once auth routes exist.
+    const redirectUrl = encodeURIComponent(location.pathname + location.search);
     content = (
-      <Notice title="Sign in required">You need to sign in to respond to this form.</Notice>
+      <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+        <h1 className="text-xl font-semibold">Sign in required</h1>
+        <p className="mt-2 text-neutral-600">
+          The creator of this form requires you to sign in before responding.
+        </p>
+        <Link
+          to={`/login?redirect=${redirectUrl}`}
+          className="mt-6 inline-block rounded-lg bg-indigo-600 px-5 py-2.5 font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+        >
+          Sign in to respond
+        </Link>
+      </div>
     );
   } else {
-    content = <FormFiller form={form} api={defaultFillApi} />;
+    content = <FormFiller form={form} api={defaultFillApi} userId={session?.user.id} />;
   }
 
   return <main className="mx-auto max-w-2xl px-4 py-8 sm:py-12">{content}</main>;

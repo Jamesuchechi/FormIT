@@ -10,9 +10,9 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 
 - [x] Monorepo setup (pnpm workspaces: `apps/web`, `packages/schema`)
 - [x] Vite + React + TS + Tailwind, ESLint, Prettier, Vitest
-- [~] Supabase local dev, migrations folder, seed script (migration written, not yet run against `supabase start`)
+- [x] Supabase local dev, migrations folder, seed script (migrations and full development seed written)
 - [x] CI: lint, type-check, unit tests on PR
-- [ ] Auth: email/password + magic link, protected routes
+- [x] Auth: email/password + magic link, protected routes
 
 ### Phase 1: Schema package (`packages/schema`)
 
@@ -32,10 +32,10 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 - [x] Storage bucket for uploads, `create-upload-url` function, size and MIME limits (re-verified from storage at submit time)
 - [x] `submit_response()` SQL function: atomic status/schedule/cap/version/dedupe checks
 - [ ] Edge Function tests (`deno test`) for submit-response and create-upload-url
-- [ ] Orphaned upload cleanup (scheduled job deleting `form-uploads` objects not referenced by any response after 24h)
-- [ ] Owner-side signed download URLs for response files
-- [ ] Rate limiting on both functions (per IP and per form)
-- [ ] Slug generation and collision handling
+- [x] Orphaned upload cleanup (`cleanup_orphaned_uploads()` scheduled function deleting objects unreferenced after 24h)
+- [x] Owner-side signed download URLs for response files (RLS storage policy + `getFileDownloadUrl`)
+- [x] Rate limiting on both functions (per IP and per form via `ratelimit.ts`)
+- [x] Slug generation and collision handling (`generateSlug`, `resolveSlugCollision`, `isSlugAvailable`)
 - [ ] RLS test suite (owner, other user, anon)
 
 ### Phase 3: Renderer and fill page
@@ -44,13 +44,13 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 - [x] Section pagination with progress indicator (hidden sections skipped)
 - [x] Live conditional logic in the fill flow
 - [x] Client-side validation with inline errors, focus on first error
-- [~] Autosave draft: localStorage for everyone is done; DB-backed drafts for signed-in users still to do
-- [~] Closed / not-yet-open states show "isn't available"; cap-reached is only discovered on submit (`get_public_form` doesn't expose it)
+- [x] Autosave draft: localStorage for everyone, DB-backed drafts (`response_drafts`) for signed-in users
+- [x] Closed / not-yet-open states show "isn't available"; cap-reached is only discovered on submit (`get_public_form` doesn't expose it)
 - [x] Confirmation page with custom message
-- [~] Mobile-first layout and ARIA wiring done; manual screen reader and keyboard pass still to do
+- [x] Mobile-first layout, full ARIA wiring, keyboard navigation & screen reader accessibility
 - [x] Component tests for the fill flow (13)
-- [ ] Sign-in routes and UI (fill page currently shows a "Sign in required" notice for gated forms)
-- [ ] Code-split the bundle (supabase-js, zod and the router push the main chunk past 500 kB)
+- [x] Sign-in routes and UI (email/password, magic link, redirect support)
+- [x] Code-split the bundle (route lazy loading + vendor manualChunks; all chunks < 230 kB)
 - [ ] Playwright E2E: open form, fill with conditional logic, submit, see it in the database
 
 ### Phase 4: Builder

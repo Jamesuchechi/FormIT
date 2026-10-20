@@ -49,6 +49,17 @@ export async function getPublicForm(slug: string): Promise<PublicForm | null> {
   };
 }
 
+/** Check if a slug is available for a new or renamed form. */
+export async function isSlugAvailable(slug: string, currentFormId?: string): Promise<boolean> {
+  let query = supabase.from("forms").select("id").eq("slug", slug);
+  if (currentFormId) {
+    query = query.neq("id", currentFormId);
+  }
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return data === null;
+}
+
 export function submitResponse(slug: string, answers: Record<string, unknown>) {
   return call<{ ok: true; id: string; confirmation_message: string | null }>("submit-response", {
     slug,
@@ -72,6 +83,15 @@ export async function uploadFile(slug: string, fieldId: string, file: File): Pro
   if (error) throw new ApiError("upload_failed", 0);
 
   return { path, name: file.name, size: file.size, mime: file.type || "application/octet-stream" };
+}
+
+/** Generate a signed download URL for an uploaded file (form owner only). */
+export async function getFileDownloadUrl(path: string, expiresIn = 3600): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(UPLOAD_BUCKET)
+    .createSignedUrl(path, expiresIn);
+  if (error || !data) throw new ApiError("download_failed", 0);
+  return data.signedUrl;
 }
 
 /** The API surface the fill page needs. Injected so the renderer can be tested and previewed. */

@@ -3,15 +3,15 @@ import type { FillApi, PublicForm } from "../../lib/api.ts";
 import { FieldRenderer } from "./FieldRenderer.tsx";
 import { useFillState } from "./useFillState.ts";
 
-type Props = { form: PublicForm; api: FillApi };
+type Props = { form: PublicForm; api: FillApi; userId?: string };
 
 const primary =
   "rounded-lg bg-indigo-600 px-5 py-2.5 font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-60";
 const secondary =
   "rounded-lg border border-neutral-300 bg-white px-5 py-2.5 font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-400/40";
 
-export function FormFiller({ form, api }: Props) {
-  const s = useFillState(form, api);
+export function FormFiller({ form, api, userId }: Props) {
+  const s = useFillState(form, api, userId);
   const headerRef = useRef<HTMLElement>(null);
 
   // Bring the top of the form back into view when paging.

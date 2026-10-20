@@ -2,6 +2,7 @@ import { HttpError, handle, isRecord, json, readJson } from "../_shared/http.ts"
 import { SLUG, loadOpenForm, type OpenForm } from "../_shared/forms.ts";
 import { admin, getUserId, UPLOAD_BUCKET } from "../_shared/supabase.ts";
 import { allFields, mimeAllowed, validateSubmission } from "../_shared/schema/index.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 /**
  * POST /functions/v1/submit-response
@@ -16,6 +17,8 @@ Deno.serve(
     if (!isRecord(body) || typeof body.slug !== "string" || !SLUG.test(body.slug)) {
       throw new HttpError(400, "invalid_request");
     }
+
+    rateLimit(req, body.slug);
 
     const form = await loadOpenForm(body.slug);
     const userId = await getUserId(req);

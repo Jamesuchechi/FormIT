@@ -3,7 +3,7 @@ import type { Field, Section } from "@formit/schema";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, describeApiError } from "../../lib/errors.ts";
 import type { FillApi, PublicForm } from "../../lib/api.ts";
-import { clearDraft, loadDraft, saveDraft } from "./draft.ts";
+import { clearDraft, loadDraft, loadRemoteDraft, saveDraft } from "./draft.ts";
 
 export type VisibleSection = { section: Section; fields: Field[] };
 export type FieldErrors = Record<string, string[]>;
@@ -22,8 +22,8 @@ function focusField(id: string) {
   });
 }
 
-export function useFillState(form: PublicForm, api: FillApi) {
-  const { schema, slug, schemaVersion } = form;
+export function useFillState(form: PublicForm, api: FillApi, userId?: string) {
+  const { schema, slug, schemaVersion, id: formId } = form;
 
   const knownIds = useMemo(() => new Set(allFields(schema).map((f) => f.id)), [schema]);
 
@@ -34,6 +34,25 @@ export function useFillState(form: PublicForm, api: FillApi) {
     if (!draft) return {};
     return Object.fromEntries(Object.entries(draft).filter(([id]) => knownIds.has(id)));
   });
+
+  // Sync remote draft if respondent is authenticated
+  useEffect(() => {
+    if (!userId || !formId) return;
+    let active = true;
+    void loadRemoteDraft(formId, schemaVersion).then((remote) => {
+      if (!active || !remote) return;
+      setAnswers((prev) => {
+        const validRemote = Object.fromEntries(
+          Object.entries(remote).filter(([id]) => knownIds.has(id)),
+        );
+        return { ...validRemote, ...prev };
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [userId, formId, schemaVersion, knownIds]);
+
   const [errors, setErrors] = useState<FieldErrors>({});
   const [stepRaw, setStep] = useState(0);
   const [status, setStatus] = useState<"editing" | "submitting" | "done">("editing");
@@ -62,9 +81,12 @@ export function useFillState(form: PublicForm, api: FillApi) {
       first.current = false;
       return;
     }
-    const t = setTimeout(() => saveDraft(slug, schemaVersion, answers), 400);
+    const t = setTimeout(
+      () => saveDraft(slug, schemaVersion, answers, { formId, userId }),
+      400,
+    );
     return () => clearTimeout(t);
-  }, [answers, slug, schemaVersion, status]);
+  }, [answers, slug, schemaVersion, status, formId, userId]);
 
   const setValue = useCallback((id: string, value: unknown) => {
     setAnswers((prev) => {
@@ -131,7 +153,7 @@ export function useFillState(form: PublicForm, api: FillApi) {
     setFormError(null);
     try {
       const res = await api.submit(slug, result.data);
-      clearDraft(slug, schemaVersion);
+      clearDraft(slug, schemaVersion, { formId, userId });
       setConfirmation(res.confirmation_message ?? form.confirmationMessage ?? DEFAULT_CONFIRMATION);
       setStatus("done");
     } catch (e) {

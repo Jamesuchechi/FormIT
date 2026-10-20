@@ -2,6 +2,7 @@ import { HttpError, handle, isRecord, json, readJson } from "../_shared/http.ts"
 import { SLUG, loadOpenForm } from "../_shared/forms.ts";
 import { admin, getUserId, UPLOAD_BUCKET } from "../_shared/supabase.ts";
 import { allFields, mimeAllowed } from "../_shared/schema/index.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 /**
  * POST /functions/v1/create-upload-url
@@ -27,6 +28,8 @@ Deno.serve(
     ) {
       throw new HttpError(400, "invalid_request");
     }
+
+    rateLimit(req, body.slug);
 
     const form = await loadOpenForm(body.slug);
     if (form.settings.requireSignIn && !(await getUserId(req))) {
