@@ -1,0 +1,10 @@
+# Minimal config. Run `supabase init` to regenerate the full default file if you need other options.
+project_id = "formit"
+
+# Both functions accept anonymous respondents and do their own auth (getUserId), so the
+# gateway JWT check is off. This also keeps them working with the new publishable API keys.
+[functions.submit-response]
+verify_jwt = false
+
+[functions.create-upload-url]
+verify_jwt = false
