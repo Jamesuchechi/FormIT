@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { Navbar } from "./components/Navbar.tsx";
 import { AuthProvider } from "./features/auth/AuthContext.tsx";
+import { RequireAuth } from "./features/auth/RequireAuth.tsx";
 
 const HomePage = lazy(() =>
   import("./routes/HomePage.tsx").then((m) => ({ default: m.HomePage })),
@@ -14,6 +15,9 @@ const LoginPage = lazy(() =>
 );
 const AuthCallbackPage = lazy(() =>
   import("./routes/AuthCallbackPage.tsx").then((m) => ({ default: m.AuthCallbackPage })),
+);
+const BuilderPage = lazy(() =>
+  import("./routes/BuilderPage.tsx").then((m) => ({ default: m.BuilderPage })),
 );
 const NotFoundPage = lazy(() =>
   import("./routes/NotFoundPage.tsx").then((m) => ({ default: m.NotFoundPage })),
@@ -39,6 +43,16 @@ export function App() {
           <Routes>
             {/* Public fill page without main navbar distraction */}
             <Route path="/f/:slug" element={<FillPage />} />
+
+            {/* Dedicated full-screen builder workspace */}
+            <Route
+              path="/forms/:id/edit"
+              element={
+                <RequireAuth>
+                  <BuilderPage />
+                </RequireAuth>
+              }
+            />
 
             {/* Standard app pages with navbar */}
             <Route

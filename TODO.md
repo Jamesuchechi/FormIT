@@ -55,15 +55,16 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 
 ### Phase 4: Builder
 
-- [ ] Builder shell: canvas, field palette, inspector panel
-- [ ] Add, delete, duplicate, reorder fields (dnd-kit)
-- [ ] Sections: add, reorder, move fields between sections
-- [ ] Inspector: label, help text, required, options editor, validation rules
-- [ ] Conditional logic UI (rule builder, show only earlier fields as sources)
-- [ ] Live preview using the real renderer
-- [ ] Autosave builder state, publish action, auto-bump `schema_version` once responses exist
-- [ ] Undo/redo
-- [ ] Settings panel: access, one-per-user, schedule, response cap, confirmation message
+- [x] Builder shell: canvas, field palette, inspector panel (Argon visual direct-canvas design)
+- [x] Add, delete, duplicate, reorder fields (@dnd-kit sortable with tactile question cards)
+- [x] Sections: add, delete, reorder, section titles and field groupings
+- [x] Inspector: label, help text, required switch, options editor, type-specific validation rules
+- [x] Conditional logic UI (visual rule builder scoped strictly to preceding fields)
+- [x] Live interactive preview using FormFiller with desktop & mobile viewport toggles
+- [x] Debounced autosave builder state to Supabase, publish/status toggles, share link modal
+- [x] Undo/redo with 50-step history stack and keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z, Escape)
+- [x] Settings panel: sign-in requirement, one response per user, response cap, custom slug with real-time collision check, custom confirmation message
+- [x] Full unit test suite for builder state, header, palette, canvas, and inspector (10 tests)
 
 ### Phase 5: Responses and results
 

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { FormitLogo } from "../components/FormitLogo.tsx";
 import { useSession } from "../features/auth/useSession.ts";
 import { FormFiller } from "../features/renderer/FormFiller.tsx";
 import { defaultFillApi, getPublicForm } from "../lib/api.ts";
@@ -76,5 +77,20 @@ export function FillPage() {
     content = <FormFiller form={form} api={defaultFillApi} userId={session?.user.id} />;
   }
 
-  return <main className="mx-auto max-w-2xl px-4 py-8 sm:py-12">{content}</main>;
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-8 sm:py-12 flex flex-col min-h-screen justify-between">
+      <div>{content}</div>
+      <footer className="mt-12 pb-6 text-center">
+        <Link
+          to="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+        >
+          <span>Powered by</span>
+          <FormitLogo size="xs" showWordmark />
+        </Link>
+      </footer>
+    </main>
+  );
 }
