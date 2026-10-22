@@ -20,6 +20,12 @@ Deno.serve(
 
     rateLimit(req, body.slug);
 
+    // Honeypot: real users never see or fill this field. Pretend success so bots learn nothing.
+    if (typeof body.website === "string" && body.website.trim() !== "") {
+      return json({ ok: true, id: crypto.randomUUID(), confirmation_message: null }, 201);
+    }
+    await verifyTurnstile(req, body.turnstileToken);
+
     const form = await loadOpenForm(body.slug);
     const userId = await getUserId(req);
     if (form.settings.requireSignIn && !userId) throw new HttpError(401, "sign_in_required");
@@ -116,4 +122,27 @@ function mapRpcError(error: { code?: string; message: string }): HttpError {
       console.error("submit_response failed", error);
       return new HttpError(500, "internal_error");
   }
+}
+
+/**
+ * Optional Cloudflare Turnstile. Enforced only when TURNSTILE_SECRET_KEY is configured,
+ * so local dev and self-hosts work without it.
+ */
+async function verifyTurnstile(req: Request, token: unknown): Promise<void> {
+  const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
+  if (!secret) return;
+  if (typeof token !== "string" || token === "") throw new HttpError(400, "captcha_required");
+
+  const form = new FormData();
+  form.set("secret", secret);
+  form.set("response", token);
+  const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for");
+  if (ip) form.set("remoteip", ip.split(",")[0]!.trim());
+
+  const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    body: form,
+  });
+  const result = (await res.json().catch(() => ({}))) as { success?: boolean };
+  if (!result.success) throw new HttpError(400, "captcha_failed");
 }

@@ -291,4 +291,4 @@ See [TODO.md](./TODO.md). Next up after v1: quizzes and scoring, collaborators, 
 
 ## License
 
-TBD
+[MIT](./LICENSE)

@@ -37,8 +37,26 @@ export function FormitLogo({
           xmlns="http://www.w3.org/2000/svg"
         >
           <rect width="100" height="100" rx="24" fill="#18181b" />
-          <rect x="22" y="36" width="16" height="34" rx="4" transform="rotate(-15 22 36)" fill="#60a5fa" opacity="0.4" />
-          <rect x="30" y="30" width="17" height="38" rx="4" transform="rotate(-8 30 30)" fill="#6366f1" opacity="0.75" />
+          <rect
+            x="22"
+            y="36"
+            width="16"
+            height="34"
+            rx="4"
+            transform="rotate(-15 22 36)"
+            fill="#60a5fa"
+            opacity="0.4"
+          />
+          <rect
+            x="30"
+            y="30"
+            width="17"
+            height="38"
+            rx="4"
+            transform="rotate(-8 30 30)"
+            fill="#6366f1"
+            opacity="0.75"
+          />
           <path
             d="M44 26 C44 23.8 45.8 22 48 22 L74 22 C76.2 22 78 23.8 77.2 26.2 L73.5 37 C73 38.5 71.5 39.5 70 39.5 L55 39.5 L55 46 L68 46 C70.2 46 71.8 47.8 71 50 L68 58 C67.5 59.5 66 60.5 64.5 60.5 L53 60.5 L47 79 C46.4 80.8 44.5 82 42.5 82 L38 82 C35.8 82 34.2 80 34.8 78 L44 48 Z"
             fill="url(#logoGrad)"

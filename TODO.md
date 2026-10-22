@@ -68,23 +68,24 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 
 ### Phase 5: Responses and results
 
-- [ ] Responses table: pagination, sort, per-column display by field type
-- [ ] Single-response detail view
-- [ ] Summary view: bar/pie for choice fields, histogram for scales, text list for open answers
-- [ ] Render old responses against the right `form_versions` schema
-- [ ] CSV export (streamed, handles large forms)
-- [ ] Delete response, delete all responses
-- [ ] Open/close toggle and response count on dashboard
+- [x] Responses table: pagination (25/page), server-side sort (submitted time and answer columns), per-column display by field type
+- [x] Single-response detail view (side drawer, file downloads via signed URLs)
+- [x] Summary view: bar + pie for choice fields, histogram + average for scales, text list for open answers
+- [x] Render old responses against the right `form_versions` schema
+- [x] CSV export (batched 1000 rows, Blob-assembled, formula-injection safe, handles large forms)
+- [x] Delete response, delete all responses
+- [x] Open/close toggle and response count on dashboard (also toggle on the responses page)
+- [x] Unit tests for results helpers (5)
 
 ### Phase 6: Polish and launch
 
-- [ ] Dashboard: list, search, duplicate form, delete with confirm
-- [ ] Share dialog: copy link, QR code
-- [ ] Empty states, loading skeletons, error boundaries
-- [ ] Basic spam protection (honeypot, optional Turnstile)
+- [x] Dashboard: list, search, duplicate form, delete with confirm
+- [x] Share dialog: copy link, QR code (canvas render & download, integrated in dashboard and builder)
+- [x] Empty states, loading skeletons, error boundaries
+- [x] Basic spam protection (honeypot trap field, server-side silent discard, optional Cloudflare Turnstile)
 - [ ] E2E suite: build, fill, submit, view, export
 - [ ] Deploy (Vercel + Supabase cloud), custom domain, error monitoring
-- [ ] README screenshots, license, tag `v1.0.0`
+- [ ] README screenshots, license (MIT added), tag `v1.0.0`
 
 ---
 

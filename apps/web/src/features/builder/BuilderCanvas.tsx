@@ -106,9 +106,7 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
                 <input
                   type="text"
                   value={section.title || ""}
-                  onChange={(e) =>
-                    actions.updateSection(section.id, { title: e.target.value })
-                  }
+                  onChange={(e) => actions.updateSection(section.id, { title: e.target.value })}
                   placeholder={`Section ${secIdx + 1} Title`}
                   className="mt-2 w-full text-lg font-semibold text-neutral-900 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-1 transition-colors"
                 />
@@ -165,9 +163,7 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
               {/* Empty section state */}
               {section.fields.length === 0 && (
                 <div className="rounded-xl border-2 border-dashed border-neutral-300 bg-white/50 p-8 text-center">
-                  <p className="text-xs text-neutral-500">
-                    This section has no questions yet.
-                  </p>
+                  <p className="text-xs text-neutral-500">This section has no questions yet.</p>
                   <button
                     type="button"
                     onClick={() => actions.addField(section.id, "short_text")}

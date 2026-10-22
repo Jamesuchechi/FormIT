@@ -1,22 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  FIELD_TYPES,
-  newId,
-  type Field,
-  type FieldOption,
-  type FieldType,
-} from "@formit/schema";
-import {
-  Calendar,
-  Copy,
-  GripVertical,
-  Plus,
-  Trash2,
-  UploadCloud,
-  X,
-  Zap,
-} from "lucide-react";
+import { FIELD_TYPES, newId, type Field, type FieldOption, type FieldType } from "@formit/schema";
+import { Calendar, Copy, GripVertical, Plus, Trash2, UploadCloud, X, Zap } from "lucide-react";
 import type { BuilderActions } from "./types.ts";
 
 interface BuilderFieldCardProps {
@@ -34,14 +19,9 @@ export function BuilderFieldCard({
   onSelect,
   actions,
 }: BuilderFieldCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: field.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: field.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -49,7 +29,11 @@ export function BuilderFieldCard({
   };
 
   function handleAddOption() {
-    if (field.type !== "multiple_choice" && field.type !== "checkboxes" && field.type !== "dropdown") {
+    if (
+      field.type !== "multiple_choice" &&
+      field.type !== "checkboxes" &&
+      field.type !== "dropdown"
+    ) {
       return;
     }
     const currentOptions = (field as { options: FieldOption[] }).options || [];
@@ -63,7 +47,11 @@ export function BuilderFieldCard({
   }
 
   function handleUpdateOption(optionId: string, label: string) {
-    if (field.type !== "multiple_choice" && field.type !== "checkboxes" && field.type !== "dropdown") {
+    if (
+      field.type !== "multiple_choice" &&
+      field.type !== "checkboxes" &&
+      field.type !== "dropdown"
+    ) {
       return;
     }
     const currentOptions = (field as { options: FieldOption[] }).options || [];
@@ -74,7 +62,11 @@ export function BuilderFieldCard({
   }
 
   function handleDeleteOption(optionId: string) {
-    if (field.type !== "multiple_choice" && field.type !== "checkboxes" && field.type !== "dropdown") {
+    if (
+      field.type !== "multiple_choice" &&
+      field.type !== "checkboxes" &&
+      field.type !== "dropdown"
+    ) {
       return;
     }
     const currentOptions = (field as { options: FieldOption[] }).options || [];
@@ -118,9 +110,7 @@ export function BuilderFieldCard({
             <input
               type="text"
               value={field.label}
-              onChange={(e) =>
-                actions.updateField(sectionId, field.id, { label: e.target.value })
-              }
+              onChange={(e) => actions.updateField(sectionId, field.id, { label: e.target.value })}
               placeholder="Question title"
               className="w-full text-base font-semibold text-neutral-900 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-0.5 transition-colors"
             />
@@ -134,9 +124,7 @@ export function BuilderFieldCard({
           <input
             type="text"
             value={field.helpText || ""}
-            onChange={(e) =>
-              actions.updateField(sectionId, field.id, { helpText: e.target.value })
-            }
+            onChange={(e) => actions.updateField(sectionId, field.id, { helpText: e.target.value })}
             placeholder="Add description or instructions (optional)"
             className="w-full text-xs text-neutral-500 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-0.5 transition-colors"
           />
@@ -329,25 +317,20 @@ export function BuilderFieldCard({
         {field.type === "linear_scale" && (
           <div className="flex flex-wrap items-center gap-2 py-1">
             {field.labels?.min && (
-              <span className="text-xs text-neutral-500 mr-1">
-                {field.labels.min}
-              </span>
+              <span className="text-xs text-neutral-500 mr-1">{field.labels.min}</span>
             )}
-            {Array.from(
-              { length: field.max - field.min + 1 },
-              (_, i) => field.min + i,
-            ).map((val) => (
-              <div
-                key={val}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700"
-              >
-                {val}
-              </div>
-            ))}
+            {Array.from({ length: field.max - field.min + 1 }, (_, i) => field.min + i).map(
+              (val) => (
+                <div
+                  key={val}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700"
+                >
+                  {val}
+                </div>
+              ),
+            )}
             {field.labels?.max && (
-              <span className="text-xs text-neutral-500 ml-1">
-                {field.labels.max}
-              </span>
+              <span className="text-xs text-neutral-500 ml-1">{field.labels.max}</span>
             )}
           </div>
         )}

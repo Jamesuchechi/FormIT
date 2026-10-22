@@ -20,9 +20,7 @@ export function RequireAuth({ children }: { children?: ReactNode }) {
   }
 
   if (!session) {
-    const redirectPath = encodeURIComponent(
-      location.pathname + location.search + location.hash,
-    );
+    const redirectPath = encodeURIComponent(location.pathname + location.search + location.hash);
     return <Navigate to={`/login?redirect=${redirectPath}`} replace />;
   }
 

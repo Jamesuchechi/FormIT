@@ -23,9 +23,10 @@ function getFormSnapshot(schema: FormSchema, form: FormRecord): string {
   });
 }
 
-export function useBuilderState(
-  initialForm: FormRecord,
-): { state: BuilderState; actions: BuilderActions } {
+export function useBuilderState(initialForm: FormRecord): {
+  state: BuilderState;
+  actions: BuilderActions;
+} {
   const [form, setForm] = useState<FormRecord>(initialForm);
   const [schema, setSchema] = useState<FormSchema>(initialForm.schema);
 

@@ -1,9 +1,4 @@
-import {
-  allFields,
-  type Field,
-  type Rule,
-  type RuleOp,
-} from "@formit/schema";
+import { allFields, type Field, type Rule, type RuleOp } from "@formit/schema";
 import { AlertCircle, Sliders, Trash2, X, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { BuilderActions, BuilderState } from "./types.ts";
@@ -63,11 +58,9 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
     if (value === "" || value === undefined) {
       delete nextValidation[key];
     }
-    actions.updateField(
-      sectionId,
-      field.id,
-      { validation: nextValidation } as unknown as Partial<Field>,
-    );
+    actions.updateField(sectionId, field.id, {
+      validation: nextValidation,
+    } as unknown as Partial<Field>);
   }
 
   // Simple rule helper for visibleIf: { field, op, value }
@@ -235,9 +228,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                 <h4 className="text-xs font-semibold text-neutral-700">Paragraph Bounds</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[11px] text-neutral-600 block mb-1">
-                      Min length
-                    </label>
+                    <label className="text-[11px] text-neutral-600 block mb-1">Min length</label>
                     <input
                       type="number"
                       min={0}
@@ -253,9 +244,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-neutral-600 block mb-1">
-                      Max length
-                    </label>
+                    <label className="text-[11px] text-neutral-600 block mb-1">Max length</label>
                     <input
                       type="number"
                       min={1}
@@ -386,10 +375,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                               const next = e.target.checked
                                 ? [...currentAccept, opt.mime]
                                 : currentAccept.filter((m) => m !== opt.mime);
-                              handleValidationChange(
-                                "accept",
-                                next.length > 0 ? next : undefined,
-                              );
+                              handleValidationChange("accept", next.length > 0 ? next : undefined);
                             }}
                             className="rounded border-neutral-300 text-indigo-600"
                           />

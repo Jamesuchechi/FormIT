@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
-import type { FillApi, PublicForm } from "../../lib/api.ts";
+import { useEffect, useMemo, useRef } from "react";
+import type { FillApi, PublicForm, SubmitExtras } from "../../lib/api.ts";
 import { FieldRenderer } from "./FieldRenderer.tsx";
+import { Turnstile } from "./Turnstile.tsx";
 import { useFillState } from "./useFillState.ts";
 
 type Props = { form: PublicForm; api: FillApi; userId?: string };
@@ -11,7 +12,24 @@ const secondary =
   "rounded-lg border border-neutral-300 bg-white px-5 py-2.5 font-medium hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-400/40";
 
 export function FormFiller({ form, api, userId }: Props) {
-  const s = useFillState(form, api, userId);
+  // Spam protection: a honeypot field humans never see, and an optional Turnstile token.
+  const honeypotRef = useRef<HTMLInputElement>(null);
+  const tokenRef = useRef<string | null>(null);
+  const guardedApi = useMemo<FillApi>(
+    () => ({
+      ...api,
+      submit: (slug, answers) => {
+        const extras: SubmitExtras = {};
+        if (honeypotRef.current?.value) extras.website = honeypotRef.current.value;
+        if (tokenRef.current) extras.turnstileToken = tokenRef.current;
+        return Object.keys(extras).length > 0
+          ? api.submit(slug, answers, extras)
+          : api.submit(slug, answers);
+      },
+    }),
+    [api],
+  );
+  const s = useFillState(form, guardedApi, userId);
   const headerRef = useRef<HTMLElement>(null);
 
   // Bring the top of the form back into view when paging.
@@ -50,6 +68,14 @@ export function FormFiller({ form, api, userId }: Props) {
       }}
       className="space-y-6"
     >
+      {/* Honeypot: hidden from people and assistive tech, tempting to bots. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label>
+          Website
+          <input ref={honeypotRef} type="text" name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+
       <header ref={headerRef} className="scroll-mt-4">
         <h1 className="text-3xl font-semibold">{form.title}</h1>
         {form.schema.description && (
@@ -113,6 +139,8 @@ export function FormFiller({ form, api, userId }: Props) {
           {s.formError}
         </div>
       )}
+
+      {s.isLast && <Turnstile onToken={(t) => (tokenRef.current = t)} />}
 
       <div className="flex items-center justify-between gap-3">
         {s.step > 0 ? (

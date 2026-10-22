@@ -126,7 +126,13 @@ export function FormSettingsTab({ state, actions }: FormSettingsTabProps) {
               disabled={slugChecking || slugInput === form.slug}
               className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors"
             >
-              {slugChecking ? "Checking..." : slugSaved ? <Check className="h-4 w-4" /> : "Save Slug"}
+              {slugChecking ? (
+                "Checking..."
+              ) : slugSaved ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                "Save Slug"
+              )}
             </button>
           </div>
 
@@ -196,7 +202,10 @@ export function FormSettingsTab({ state, actions }: FormSettingsTabProps) {
 
           <div className="space-y-4 text-xs">
             <div>
-              <label htmlFor="setting-maxresponses" className="font-medium text-neutral-900 block mb-1">
+              <label
+                htmlFor="setting-maxresponses"
+                className="font-medium text-neutral-900 block mb-1"
+              >
                 Maximum Responses Cap (Optional)
               </label>
               <input

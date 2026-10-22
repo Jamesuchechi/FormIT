@@ -256,12 +256,7 @@ export function LoginPage({ defaultMode = "signin" }: LoginPageProps) {
                 to="/"
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-900 transition-colors"
               >
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -450,17 +445,13 @@ export function LoginPage({ defaultMode = "signin" }: LoginPageProps) {
                             id="auth-password"
                             name="password"
                             type={showPassword ? "text" : "password"}
-                            autoComplete={
-                              mode === "signup" ? "new-password" : "current-password"
-                            }
+                            autoComplete={mode === "signup" ? "new-password" : "current-password"}
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full pl-9 pr-10 py-2.5 text-xs rounded-xl border border-neutral-300 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all disabled:opacity-60"
                             placeholder={
-                              mode === "signup"
-                                ? "At least 6 characters"
-                                : "Your password"
+                              mode === "signup" ? "At least 6 characters" : "Your password"
                             }
                             disabled={submitting}
                           />

@@ -114,6 +114,22 @@ describe("FormFiller", () => {
     });
   });
 
+  it("forwards the honeypot value so the server can discard bot submissions", async () => {
+    const { api, user } = setup();
+    const trap = document.querySelector<HTMLInputElement>('input[name="website"]')!;
+    await user.type(trap, "http://spam.example");
+    await user.type(screen.getByLabelText(/^Name/), "Bot");
+    await user.selectOptions(screen.getByLabelText(/^Role/), "dev");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.type(screen.getByLabelText(/^Feedback/), "buy now");
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    await screen.findByText("Thanks!");
+    expect(api.submit).toHaveBeenCalledWith("my-form", expect.any(Object), {
+      website: "http://spam.example",
+    });
+  });
+
   it("does not submit answers for fields that became hidden", async () => {
     const { api, user } = setup();
     await user.type(screen.getByLabelText(/^Name/), "James");

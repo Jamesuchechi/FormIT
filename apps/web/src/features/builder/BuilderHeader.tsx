@@ -1,19 +1,18 @@
 import {
   ArrowLeft,
-  Check,
   CheckCircle2,
-  Copy,
-  ExternalLink,
   Eye,
   Loader2,
   Redo2,
   Settings as SettingsIcon,
   Share2,
+  Table2,
   Sliders,
   Undo2,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { ShareDialog } from "../../components/ShareDialog.tsx";
 import { FormitLogo } from "../../components/FormitLogo.tsx";
 import type { BuilderActions, BuilderState } from "./types.ts";
 
@@ -34,16 +33,7 @@ export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
     canUndo,
     canRedo,
   } = state;
-  const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-
-  const publicUrl = `${window.location.origin}/f/${form.slug}`;
-
-  function copyLink() {
-    navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
 
   return (
     <header className="border-b border-neutral-200 bg-white sticky top-0 z-30">
@@ -181,6 +171,14 @@ export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
             )}
           </div>
 
+          <Link
+            to={`/forms/${form.id}/responses`}
+            className="hidden sm:flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            <Table2 className="h-3.5 w-3.5" />
+            Responses
+          </Link>
+
           {/* Share / Publish Action */}
           <div className="relative">
             <button
@@ -193,53 +191,13 @@ export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
             </button>
 
             {shareOpen && (
-              <div className="absolute right-0 mt-2 w-80 rounded-xl border border-neutral-200 bg-white p-4 shadow-xl z-50">
-                <h3 className="font-semibold text-sm text-neutral-900">Share this form</h3>
-                <p className="mt-1 text-xs text-neutral-500">
-                  {form.status === "open"
-                    ? "Anyone with the link can respond."
-                    : "Form is currently in draft. Open it to allow public submissions."}
-                </p>
-
-                <div className="mt-3 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2 text-xs">
-                  <span className="flex-1 truncate font-mono text-neutral-700">{publicUrl}</span>
-                  <button
-                    type="button"
-                    onClick={copyLink}
-                    className="rounded p-1 text-neutral-500 hover:bg-white hover:text-neutral-900 shadow-sm"
-                    title="Copy URL"
-                  >
-                    {copied ? (
-                      <Check className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between pt-2 border-t border-neutral-100">
-                  <a
-                    href={`/f/${form.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline"
-                  >
-                    Open fill page <ExternalLink className="h-3 w-3" />
-                  </a>
-                  {form.status !== "open" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        actions.updateStatus("open");
-                        setShareOpen(false);
-                      }}
-                      className="rounded bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500"
-                    >
-                      Publish now
-                    </button>
-                  )}
-                </div>
-              </div>
+              <ShareDialog
+                slug={form.slug}
+                title={schema.title}
+                status={form.status}
+                onClose={() => setShareOpen(false)}
+                onPublish={() => actions.updateStatus("open")}
+              />
             )}
           </div>
         </div>

@@ -22,6 +22,8 @@ const MESSAGES: Record<string, string> = {
   payload_too_large: "Your response is too large to submit.",
   file_too_large: "That file is too large.",
   file_type_not_allowed: "That file type isn't allowed.",
+  captcha_required: "Please complete the verification check.",
+  captcha_failed: "Verification failed. Please try again.",
   upload_failed: "The upload failed. Please try again.",
 };
 

@@ -81,10 +81,7 @@ export function useFillState(form: PublicForm, api: FillApi, userId?: string) {
       first.current = false;
       return;
     }
-    const t = setTimeout(
-      () => saveDraft(slug, schemaVersion, answers, { formId, userId }),
-      400,
-    );
+    const t = setTimeout(() => saveDraft(slug, schemaVersion, answers, { formId, userId }), 400);
     return () => clearTimeout(t);
   }, [answers, slug, schemaVersion, status, formId, userId]);
 

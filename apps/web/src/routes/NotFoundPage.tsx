@@ -9,9 +9,7 @@ export function NotFoundPage() {
         <span className="inline-block px-3 py-1 rounded-full text-xs font-mono font-semibold bg-indigo-50 border border-indigo-100 text-indigo-700 mb-3">
           Error 404
         </span>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-          Page not found
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Page not found</h1>
         <p className="mt-2 text-xs text-neutral-500 leading-relaxed">
           The page or form you requested doesn&apos;t exist or might have been moved.
         </p>

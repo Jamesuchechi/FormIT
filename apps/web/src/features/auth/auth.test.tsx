@@ -120,7 +120,11 @@ describe("LoginPage", () => {
     const user = userEvent.setup();
     vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
       data: { user: null, session: null },
-      error: { message: "Invalid login credentials", name: "AuthApiError", status: 400 } as AuthError,
+      error: {
+        message: "Invalid login credentials",
+        name: "AuthApiError",
+        status: 400,
+      } as AuthError,
     });
 
     render(
@@ -176,7 +180,9 @@ describe("LoginPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Sign up" }));
 
-    expect(screen.getByRole("heading", { name: /create your formit account/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /create your formit account/i }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
 

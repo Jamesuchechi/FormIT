@@ -46,7 +46,9 @@ export function BuilderPage() {
         </div>
         <h1 className="text-xl font-bold text-neutral-900">Form not found or inaccessible</h1>
         <p className="mt-2 text-sm text-neutral-600 max-w-md">
-          {error instanceof Error ? error.message : "You may not have permission to edit this form, or it may have been deleted."}
+          {error instanceof Error
+            ? error.message
+            : "You may not have permission to edit this form, or it may have been deleted."}
         </p>
         <Link
           to="/"
@@ -59,7 +61,13 @@ export function BuilderPage() {
     );
   }
 
-  return <BuilderWorkspace initialForm={form} previewDevice={previewDevice} setPreviewDevice={setPreviewDevice} />;
+  return (
+    <BuilderWorkspace
+      initialForm={form}
+      previewDevice={previewDevice}
+      setPreviewDevice={setPreviewDevice}
+    />
+  );
 }
 
 interface WorkspaceProps {
@@ -77,9 +85,7 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
       // Don't intercept if user is typing in an input/textarea
       const target = e.target as HTMLElement | null;
       const isInput =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.isContentEditable;
+        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
 
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
         if (e.shiftKey) {

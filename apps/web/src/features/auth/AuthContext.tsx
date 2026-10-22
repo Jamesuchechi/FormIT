@@ -14,18 +14,12 @@ export interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signInWithPassword: (
-    email: string,
-    password: string,
-  ) => Promise<{ error: Error | null }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUpWithPassword: (
     email: string,
     password: string,
   ) => Promise<{ error: Error | null; user: User | null; session: Session | null }>;
-  signInWithOtp: (
-    email: string,
-    redirectTo?: string,
-  ) => Promise<{ error: Error | null }>;
+  signInWithOtp: (email: string, redirectTo?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
 }
 
@@ -79,8 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithOtp = useCallback(async (email: string, redirectTo?: string) => {
-    const targetRedirect =
-      redirectTo || `${window.location.origin}/auth/callback`;
+    const targetRedirect = redirectTo || `${window.location.origin}/auth/callback`;
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {

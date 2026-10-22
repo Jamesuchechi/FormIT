@@ -5,7 +5,6 @@ import {
   Check,
   CheckCircle2,
   Clock,
-  Copy,
   CopyPlus,
   Cpu,
   GitBranch,
@@ -14,15 +13,18 @@ import {
   Loader2,
   MousePointerClick,
   Plus,
+  Search,
   RotateCcw,
+  Share2,
   ShieldCheck,
   Sparkles,
   Trash2,
   Users,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ShareDialog } from "../components/ShareDialog.tsx";
 import { FormitLogo } from "../components/FormitLogo.tsx";
 import { GithubIcon } from "../components/icons.tsx";
 import { useAuth } from "../features/auth/AuthContext.tsx";
@@ -31,6 +33,7 @@ import {
   deleteForm,
   duplicateForm,
   getUserForms,
+  updateForm,
   type FormRecord,
 } from "../lib/api.ts";
 
@@ -66,9 +69,7 @@ function LandingView() {
         {/* Release Pill Badge */}
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-white/80 px-4 py-1.5 shadow-xs backdrop-blur-md mb-8 hover:border-indigo-300 transition-colors">
           <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
-          <span className="text-xs font-semibold text-neutral-800">
-            FormIT 1.0 Release
-          </span>
+          <span className="text-xs font-semibold text-neutral-800">FormIT 1.0 Release</span>
           <span className="text-neutral-300">•</span>
           <span className="text-xs font-medium text-indigo-600 flex items-center gap-1">
             Keyboard-first software forms
@@ -86,9 +87,9 @@ function LandingView() {
 
         {/* Hero Subtitle */}
         <p className="mt-6 text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto leading-relaxed">
-          The open-source form platform designed to replace clunky legacy surveys.
-          Direct-canvas visual editing, tactile keyboard navigation, instant conditional branching,
-          and versioned schemas.
+          The open-source form platform designed to replace clunky legacy surveys. Direct-canvas
+          visual editing, tactile keyboard navigation, instant conditional branching, and versioned
+          schemas.
         </p>
 
         {/* Hero CTAs */}
@@ -205,9 +206,24 @@ function LandingView() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                         {[
-                          { id: "founder", key: "1", title: "Founder / Exec", desc: "Building the vision" },
-                          { id: "product", key: "2", title: "Product / Designer", desc: "Designing user journeys" },
-                          { id: "engineer", key: "3", title: "Engineer / Dev", desc: "Architecting software" },
+                          {
+                            id: "founder",
+                            key: "1",
+                            title: "Founder / Exec",
+                            desc: "Building the vision",
+                          },
+                          {
+                            id: "product",
+                            key: "2",
+                            title: "Product / Designer",
+                            desc: "Designing user journeys",
+                          },
+                          {
+                            id: "engineer",
+                            key: "3",
+                            title: "Engineer / Dev",
+                            desc: "Architecting software",
+                          },
                         ].map((item) => (
                           <button
                             key={item.id}
@@ -233,9 +249,7 @@ function LandingView() {
                             <span className="font-semibold text-sm text-neutral-900">
                               {item.title}
                             </span>
-                            <span className="text-xs text-neutral-500 mt-0.5">
-                              {item.desc}
-                            </span>
+                            <span className="text-xs text-neutral-500 mt-0.5">{item.desc}</span>
                           </button>
                         ))}
                       </div>
@@ -338,7 +352,9 @@ function LandingView() {
                         <button
                           type="button"
                           onClick={() => {
-                            alert("Demo flow completed! Create your free account to build real forms.");
+                            alert(
+                              "Demo flow completed! Create your free account to build real forms.",
+                            );
                             setDemoStep(1);
                           }}
                           className="rounded-lg bg-emerald-600 px-4 py-1.5 text-white font-medium hover:bg-emerald-500 transition-colors"
@@ -354,7 +370,9 @@ function LandingView() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
                     <div>
-                      <h4 className="font-bold text-neutral-900 text-base">Direct-Canvas Visual Builder</h4>
+                      <h4 className="font-bold text-neutral-900 text-base">
+                        Direct-Canvas Visual Builder
+                      </h4>
                       <p className="text-xs text-neutral-500">
                         Edit titles, options, and rules in-situ without abstract dialog modals.
                       </p>
@@ -371,8 +389,12 @@ function LandingView() {
                           Multiple Choice Field
                         </span>
                         <div className="flex items-center gap-1.5 text-xs text-neutral-400">
-                          <span className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px]">Required</span>
-                          <span className="rounded bg-amber-50 text-amber-700 px-1.5 py-0.5 text-[10px] font-semibold">Rules Attached</span>
+                          <span className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px]">
+                            Required
+                          </span>
+                          <span className="rounded bg-amber-50 text-amber-700 px-1.5 py-0.5 text-[10px] font-semibold">
+                            Rules Attached
+                          </span>
                         </div>
                       </div>
                       <input
@@ -416,7 +438,8 @@ function LandingView() {
               Everything you need to build giant-killing forms.
             </p>
             <p className="mt-4 text-base text-neutral-600">
-              Designed from first principles to solve slow load times, rigid styling, and broken conditional jumps.
+              Designed from first principles to solve slow load times, rigid styling, and broken
+              conditional jumps.
             </p>
           </div>
 
@@ -426,11 +449,10 @@ function LandingView() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 mb-5">
                 <MousePointerClick className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900">
-                Direct-Canvas In-Situ Editing
-              </h3>
+              <h3 className="text-lg font-bold text-neutral-900">Direct-Canvas In-Situ Editing</h3>
               <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                No detached edit modals. Click directly onto your questions, choices, and descriptions on the canvas. What you see is exactly what respondents experience.
+                No detached edit modals. Click directly onto your questions, choices, and
+                descriptions on the canvas. What you see is exactly what respondents experience.
               </p>
             </div>
 
@@ -439,11 +461,17 @@ function LandingView() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 mb-5">
                 <Keyboard className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900">
-                Keyboard-First Tactile UX
-              </h3>
+              <h3 className="text-lg font-bold text-neutral-900">Keyboard-First Tactile UX</h3>
               <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                Fly through questions without lifting hands from the keyboard. Automatic hotkeys <code className="font-mono text-xs bg-white px-1 py-0.5 rounded border border-neutral-200">[1]</code>, <code className="font-mono text-xs bg-white px-1 py-0.5 rounded border border-neutral-200">[2]</code>, and smooth auto-advance.
+                Fly through questions without lifting hands from the keyboard. Automatic hotkeys{" "}
+                <code className="font-mono text-xs bg-white px-1 py-0.5 rounded border border-neutral-200">
+                  [1]
+                </code>
+                ,{" "}
+                <code className="font-mono text-xs bg-white px-1 py-0.5 rounded border border-neutral-200">
+                  [2]
+                </code>
+                , and smooth auto-advance.
               </p>
             </div>
 
@@ -452,11 +480,10 @@ function LandingView() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 mb-5">
                 <GitBranch className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900">
-                Cycle-Free Branching Logic
-              </h3>
+              <h3 className="text-lg font-bold text-neutral-900">Cycle-Free Branching Logic</h3>
               <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                Show or hide questions dynamically based on previous answers. Strict predecessor scoping guarantees zero circular dependency loops or corrupted logic.
+                Show or hide questions dynamically based on previous answers. Strict predecessor
+                scoping guarantees zero circular dependency loops or corrupted logic.
               </p>
             </div>
 
@@ -465,11 +492,10 @@ function LandingView() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 mb-5">
                 <Layers className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900">
-                Hybrid Multi-Step Pacing
-              </h3>
+              <h3 className="text-lg font-bold text-neutral-900">Hybrid Multi-Step Pacing</h3>
               <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                Group questions into thematic sections or present one question at a time. Animated step bars keep respondents motivated until completion.
+                Group questions into thematic sections or present one question at a time. Animated
+                step bars keep respondents motivated until completion.
               </p>
             </div>
 
@@ -478,11 +504,10 @@ function LandingView() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600 mb-5">
                 <RotateCcw className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900">
-                Local & Cloud Draft Autosave
-              </h3>
+              <h3 className="text-lg font-bold text-neutral-900">Local & Cloud Draft Autosave</h3>
               <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                Respondents never lose progress if a tab accidentally closes. Offline local storage caching with instant cloud synchronization for authenticated users.
+                Respondents never lose progress if a tab accidentally closes. Offline local storage
+                caching with instant cloud synchronization for authenticated users.
               </p>
             </div>
 
@@ -491,11 +516,10 @@ function LandingView() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-sky-600 mb-5">
                 <Cpu className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900">
-                Ultra-Lightweight 7 kB Engine
-              </h3>
+              <h3 className="text-lg font-bold text-neutral-900">Ultra-Lightweight 7 kB Engine</h3>
               <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                No 500 kB telemetry scripts or sluggish widgets. Clean, optimized bundle sizes that load instantly even on flaky mobile connections.
+                No 500 kB telemetry scripts or sluggish widgets. Clean, optimized bundle sizes that
+                load instantly even on flaky mobile connections.
               </p>
             </div>
           </div>
@@ -503,7 +527,10 @@ function LandingView() {
       </section>
 
       {/* Comparison Section */}
-      <section id="comparison" className="py-24 bg-neutral-50 border-t border-neutral-200 scroll-mt-16">
+      <section
+        id="comparison"
+        className="py-24 bg-neutral-50 border-t border-neutral-200 scroll-mt-16"
+      >
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-wider text-indigo-600">
@@ -595,7 +622,8 @@ function LandingView() {
             Build forms your respondents will actually love.
           </h2>
           <p className="mt-4 text-base sm:text-lg text-neutral-400 max-w-xl mx-auto">
-            Get started in seconds. Create your first keyboard-first form with our visual direct-canvas builder.
+            Get started in seconds. Create your first keyboard-first form with our visual
+            direct-canvas builder.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -656,7 +684,8 @@ function LandingView() {
 function DashboardView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [shareTarget, setShareTarget] = useState<FormRecord | null>(null);
 
   const {
     data: forms,
@@ -683,6 +712,14 @@ function DashboardView() {
     },
   });
 
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: "open" | "closed" }) =>
+      updateForm(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-forms"] });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteForm(id),
     onSuccess: () => {
@@ -690,15 +727,26 @@ function DashboardView() {
     },
   });
 
-  function handleCopyLink(form: FormRecord) {
-    const url = `${window.location.origin}/f/${form.slug}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(form.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  }
+  const needle = query.trim().toLowerCase();
+  const visibleForms = (forms ?? []).filter(
+    (f) => !needle || f.title.toLowerCase().includes(needle) || f.slug.includes(needle),
+  );
+
+  const totalResponses = useMemo(
+    () => (forms ?? []).reduce((sum, f) => sum + (f.responseCount ?? 0), 0),
+    [forms],
+  );
+  const openCount = useMemo(
+    () => (forms ?? []).filter((f) => f.status === "open").length,
+    [forms],
+  );
 
   function handleDelete(form: FormRecord) {
-    if (window.confirm(`Are you sure you want to delete "${form.title}"? All responses will be permanently removed.`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${form.title}"? All responses will be permanently removed.`,
+      )
+    ) {
       deleteMutation.mutate(form.id);
     }
   }
@@ -706,13 +754,20 @@ function DashboardView() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       {/* Dashboard Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-8 border-b border-neutral-200">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-neutral-200/80">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
-            Forms
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+              Forms
+            </h1>
+            {!isLoading && forms && forms.length > 0 && (
+              <span className="inline-flex items-center rounded-full bg-neutral-200/80 px-2.5 py-0.5 text-xs font-bold text-neutral-700">
+                {forms.length}
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm text-neutral-500">
-            Manage your forms, inspect real-time responses, and share links.
+            Create, manage, and inspect real-time responses across your workspace.
           </p>
         </div>
 
@@ -731,11 +786,53 @@ function DashboardView() {
         </button>
       </div>
 
-      {/* Loading state */}
+      {/* Loading skeleton */}
       {isLoading && (
-        <div className="flex min-h-[300px] flex-col items-center justify-center p-8 text-neutral-500">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-3" />
-          <p className="text-sm font-medium">Loading your forms...</p>
+        <div
+          className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          aria-busy="true"
+          aria-label="Loading your forms"
+        >
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-44 animate-pulse rounded-2xl border border-neutral-200 bg-white p-5"
+            >
+              <div className="h-4 w-16 rounded-full bg-neutral-100" />
+              <div className="mt-6 h-5 w-2/3 rounded bg-neutral-100" />
+              <div className="mt-2 h-3 w-1/3 rounded bg-neutral-100" />
+              <div className="mt-10 h-3 w-1/2 rounded bg-neutral-100" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Toolbar / Search & Quick Metrics */}
+      {!isLoading && !isError && forms && forms.length > 0 && (
+        <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative w-full max-w-sm">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search forms by title or slug..."
+              aria-label="Search forms"
+              className="w-full rounded-xl border border-neutral-200/90 bg-white/90 py-2 pl-9 pr-3 text-sm text-neutral-900 shadow-2xs placeholder:text-neutral-400 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-medium text-neutral-500">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 text-emerald-700 font-semibold shadow-2xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {openCount} Live
+            </span>
+            <span className="text-neutral-300">•</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 border border-neutral-200/80 px-2.5 py-1 text-neutral-600 shadow-2xs">
+              <Users className="h-3 w-3 text-neutral-400" />
+              {totalResponses} {totalResponses === 1 ? "response" : "responses"}
+            </span>
+          </div>
         </div>
       )}
 
@@ -770,10 +867,14 @@ function DashboardView() {
       )}
 
       {/* Forms Grid */}
-      {!isLoading && !isError && forms && forms.length > 0 && (
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {forms.map((form) => {
-            const isCopied = copiedId === form.id;
+      {!isLoading && !isError && forms && forms.length > 0 && visibleForms.length === 0 && (
+        <p className="mt-10 text-center text-sm text-neutral-500">
+          No forms match &ldquo;{query}&rdquo;.
+        </p>
+      )}
+      {!isLoading && !isError && visibleForms.length > 0 && (
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visibleForms.map((form) => {
             const updatedDate = new Date(form.updatedAt).toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",
@@ -783,7 +884,7 @@ function DashboardView() {
             return (
               <div
                 key={form.id}
-                className="group relative flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-neutral-300 transition-all"
+                className="group relative flex flex-col justify-between rounded-2xl border border-neutral-200/90 bg-white/95 backdrop-blur-xs p-5 shadow-xs hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-300/80 transition-all duration-200"
               >
                 <div>
                   {/* Status & Menu */}
@@ -810,17 +911,39 @@ function DashboardView() {
                     </span>
 
                     <div className="flex items-center gap-1">
+                      {form.status !== "draft" && (
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={form.status === "open"}
+                          aria-label={form.status === "open" ? "Close form" : "Reopen form"}
+                          title={form.status === "open" ? "Close form" : "Reopen form"}
+                          disabled={statusMutation.isPending}
+                          onClick={() =>
+                            statusMutation.mutate({
+                              id: form.id,
+                              status: form.status === "open" ? "closed" : "open",
+                            })
+                          }
+                          className={`relative mr-1 h-5 w-9 rounded-full transition-colors disabled:opacity-50 ${
+                            form.status === "open" ? "bg-emerald-500" : "bg-neutral-300"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${
+                              form.status === "open" ? "left-[1.1rem]" : "left-0.5"
+                            }`}
+                          />
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() => handleCopyLink(form)}
-                        title="Copy public link"
+                        onClick={() => setShareTarget(form)}
+                        title="Share form"
+                        aria-label="Share form"
                         className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
                       >
-                        {isCopied ? (
-                          <Check className="h-4 w-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
+                        <Share2 className="h-4 w-4" />
                       </button>
                       <button
                         type="button"
@@ -851,18 +974,21 @@ function DashboardView() {
                       {form.title || "Untitled Form"}
                     </h3>
                   </Link>
-                  <p className="mt-1 text-xs text-neutral-400 font-mono truncate">
-                    /f/{form.slug}
-                  </p>
+                  <p className="mt-1 text-xs text-neutral-400 font-mono truncate">/f/{form.slug}</p>
                 </div>
 
                 {/* Footer Stats & Actions */}
                 <div className="mt-6 pt-4 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1" title="Total responses">
+                    <Link
+                      to={`/forms/${form.id}/responses`}
+                      className="flex items-center gap-1 hover:text-indigo-600"
+                      title="View responses"
+                    >
                       <Users className="h-3.5 w-3.5" />
-                      {form.responseCount ?? 0}
-                    </span>
+                      {form.responseCount ?? 0}{" "}
+                      {form.responseCount === 1 ? "response" : "responses"}
+                    </Link>
                     <span className="flex items-center gap-1" title="Last updated">
                       <Clock className="h-3.5 w-3.5" />
                       {updatedDate}
@@ -880,6 +1006,15 @@ function DashboardView() {
             );
           })}
         </div>
+      )}
+      {shareTarget && (
+        <ShareDialog
+          slug={shareTarget.slug}
+          title={shareTarget.title}
+          status={shareTarget.status}
+          onClose={() => setShareTarget(null)}
+          onPublish={() => statusMutation.mutate({ id: shareTarget.id, status: "open" })}
+        />
       )}
     </main>
   );

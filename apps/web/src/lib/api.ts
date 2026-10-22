@@ -1,5 +1,11 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { isValidSlug, parseFormSchema, type FileAnswer, type FormSchema } from "@formit/schema";
+import {
+  isValidSlug,
+  parseFormSchema,
+  type AnswerValue,
+  type FileAnswer,
+  type FormSchema,
+} from "@formit/schema";
 import { ApiError } from "./errors.ts";
 import { supabase } from "./supabase.ts";
 
@@ -60,10 +66,18 @@ export async function isSlugAvailable(slug: string, currentFormId?: string): Pro
   return data === null;
 }
 
-export function submitResponse(slug: string, answers: Record<string, unknown>) {
+/** Optional anti-spam fields sent alongside a submission. */
+export type SubmitExtras = { website?: string; turnstileToken?: string };
+
+export function submitResponse(
+  slug: string,
+  answers: Record<string, unknown>,
+  extras?: SubmitExtras,
+) {
   return call<{ ok: true; id: string; confirmation_message: string | null }>("submit-response", {
     slug,
     answers,
+    ...extras,
   });
 }
 
@@ -99,6 +113,7 @@ export type FillApi = {
   submit: (
     slug: string,
     answers: Record<string, unknown>,
+    extras?: SubmitExtras,
   ) => Promise<{ ok: true; id: string; confirmation_message: string | null }>;
   upload: (slug: string, fieldId: string, file: File) => Promise<FileAnswer>;
 };
@@ -168,11 +183,7 @@ export async function getUserForms(): Promise<FormRecord[]> {
 
 /** Get a single form by its ID for editing in the builder. */
 export async function getOwnerForm(id: string): Promise<FormRecord | null> {
-  const { data: row, error } = await supabase
-    .from("forms")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  const { data: row, error } = await supabase.from("forms").select("*").eq("id", id).maybeSingle();
 
   if (error) throw error;
   if (!row) return null;
@@ -289,12 +300,7 @@ export async function updateForm(
 
   patch.updated_at = new Date().toISOString();
 
-  const { data, error } = await supabase
-    .from("forms")
-    .update(patch)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("forms").update(patch).eq("id", id).select().single();
 
   if (error) throw error;
   return mapFormRow(data);
@@ -318,4 +324,94 @@ export async function duplicateForm(id: string): Promise<FormRecord> {
       title: `${original.title} (Copy)`,
     },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/* Owner Responses API                                                 */
+/* ------------------------------------------------------------------ */
+
+export type ResponseRecord = {
+  id: string;
+  respondentId: string | null;
+  schemaVersion: number;
+  answers: Record<string, AnswerValue | undefined>;
+  submittedAt: string;
+};
+
+function mapResponseRow(row: Record<string, unknown>): ResponseRecord {
+  return {
+    id: String(row.id),
+    respondentId: (row.respondent_id as string | null) ?? null,
+    schemaVersion: Number(row.schema_version),
+    answers: (row.answers || {}) as ResponseRecord["answers"],
+    submittedAt: String(row.submitted_at),
+  };
+}
+
+/** Every schema version a response may have been submitted against (owner only). */
+export async function getFormVersions(formId: string): Promise<Record<number, FormSchema>> {
+  const { data, error } = await supabase
+    .from("form_versions")
+    .select("version, schema")
+    .eq("form_id", formId);
+  if (error) throw error;
+  const out: Record<number, FormSchema> = {};
+  for (const row of data ?? []) {
+    const parsed = parseFormSchema(row.schema);
+    if (parsed.success) out[row.version as number] = parsed.data;
+  }
+  return out;
+}
+
+export type ResponseSort = { key: "submitted_at" | string; ascending: boolean };
+
+/** One page of responses plus the total count. Sort key is `submitted_at` or a field id. */
+export async function getResponsesPage(
+  formId: string,
+  opts: { page: number; pageSize: number; sort: ResponseSort },
+): Promise<{ rows: ResponseRecord[]; total: number }> {
+  const from = opts.page * opts.pageSize;
+  const orderCol = opts.sort.key === "submitted_at" ? "submitted_at" : `answers->>${opts.sort.key}`;
+  const { data, error, count } = await supabase
+    .from("responses")
+    .select("*", { count: "exact" })
+    .eq("form_id", formId)
+    .order(orderCol, { ascending: opts.sort.ascending })
+    .order("id", { ascending: true })
+    .range(from, from + opts.pageSize - 1);
+  if (error) throw error;
+  return { rows: (data ?? []).map(mapResponseRow), total: count ?? 0 };
+}
+
+/**
+ * Async generator over all responses, newest first, in keyset-stable batches.
+ * Used by CSV export and summaries so large forms never load in one request.
+ */
+export async function* iterateResponses(
+  formId: string,
+  batchSize = 1000,
+): AsyncGenerator<ResponseRecord[]> {
+  for (let from = 0; ; from += batchSize) {
+    const { data, error } = await supabase
+      .from("responses")
+      .select("*")
+      .eq("form_id", formId)
+      .order("submitted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, from + batchSize - 1);
+    if (error) throw error;
+    const rows = (data ?? []).map(mapResponseRow);
+    if (rows.length > 0) yield rows;
+    if (rows.length < batchSize) return;
+  }
+}
+
+export async function deleteResponse(id: string): Promise<void> {
+  const { error } = await supabase.from("responses").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteAllResponses(formId: string): Promise<void> {
+  const { error } = await supabase.from("responses").delete().eq("form_id", formId);
+  if (error) throw error;
 }
