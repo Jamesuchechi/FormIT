@@ -1,7 +1,8 @@
 import { allFields, type Field, type Rule, type RuleOp } from "@formit/schema";
-import { AlertCircle, BookmarkPlus, Sliders, Trash2, X, Zap } from "lucide-react";
+import { AlertCircle, BookmarkPlus, FileSpreadsheet, Sliders, Trash2, X, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SaveQuestionModal } from "../questionBank/SaveQuestionModal.tsx";
+import { ImportOptionsModal } from "./ImportOptionsModal.tsx";
 import type { BuilderActions, BuilderState } from "./types.ts";
 
 interface FieldInspectorProps {
@@ -13,6 +14,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
   const { schema, selectedFieldId } = state;
   const [tab, setTab] = useState<"general" | "logic">("general");
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Find currently selected field and its section
   const { field, sectionId } = useMemo(() => {
@@ -262,6 +264,97 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                     />
                   </div>
                 </div>
+              </div>
+            )}
+
+            {(field.type === "multiple_choice" ||
+              field.type === "checkboxes" ||
+              field.type === "dropdown") && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-neutral-700">Options & Choices</h4>
+                  <span className="text-[11px] font-medium text-neutral-500">
+                    {field.options.length} {field.options.length === 1 ? "option" : "options"}
+                  </span>
+                </div>
+
+                {/* Bulk Import / Paste Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white p-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-indigo-600" />
+                  Bulk Add / Import from CSV
+                </button>
+
+                {/* Allow Other Toggle */}
+                <div className="flex items-center justify-between rounded-lg border border-neutral-200 p-3 bg-neutral-50/50">
+                  <div>
+                    <label
+                      htmlFor="field-other-toggle"
+                      className="text-xs font-medium text-neutral-900 block cursor-pointer"
+                    >
+                      Allow "Other" choice
+                    </label>
+                    <span className="text-[10px] text-neutral-500">
+                      Adds an "Other" option with text box
+                    </span>
+                  </div>
+                  <input
+                    id="field-other-toggle"
+                    type="checkbox"
+                    checked={!!field.allowOther}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        allowOther: e.target.checked,
+                      } as unknown as Partial<Field>)
+                    }
+                    className="rounded border-neutral-300 accent-indigo-600 size-4 cursor-pointer"
+                  />
+                </div>
+
+                {/* Checkbox limits */}
+                {field.type === "checkboxes" && (
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <label className="text-[11px] text-neutral-600 block mb-1">
+                        Min selections
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={field.validation.minSelected ?? ""}
+                        onChange={(e) =>
+                          handleValidationChange(
+                            "minSelected",
+                            e.target.value ? Number(e.target.value) : undefined,
+                          )
+                        }
+                        className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-neutral-600 block mb-1">
+                        Max selections
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={field.validation.maxSelected ?? ""}
+                        onChange={(e) =>
+                          handleValidationChange(
+                            "maxSelected",
+                            e.target.value ? Number(e.target.value) : undefined,
+                          )
+                        }
+                        className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                        placeholder="Unlimited"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -515,6 +608,19 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
         field={field}
         onClose={() => setIsSaveModalOpen(false)}
       />
+
+      {field && "options" in field && (
+        <ImportOptionsModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          currentOptions={field.options}
+          onImport={(newOptions) =>
+            actions.updateField(sectionId, field.id, {
+              options: newOptions,
+            } as unknown as Partial<Field>)
+          }
+        />
+      )}
     </aside>
   );
 }

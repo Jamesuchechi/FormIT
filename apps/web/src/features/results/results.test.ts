@@ -124,4 +124,21 @@ describe("results helpers", () => {
     );
     expect(text.trim().split("\r\n")).toHaveLength(3);
   });
+
+  it("formats and summarizes Other choice answers correctly", () => {
+    const cols = buildColumns(v2, versions);
+    const otherRow = resp({
+      schemaVersion: 2,
+      answers: { color: { other: "Emerald Green" } },
+    });
+    expect(formatResponseAnswer(otherRow, cols[0]!, versions)).toBe("Other: Emerald Green");
+
+    const [color] = summarize(cols, [otherRow], versions);
+    expect(color).toMatchObject({ kind: "choice", answered: 1 });
+    if (color?.kind !== "choice") throw new Error("expected choice");
+    const otherBar = color.bars.find((b) => b.id === "__other__");
+    expect(otherBar).toBeDefined();
+    expect(otherBar?.count).toBe(1);
+    expect(otherBar?.label).toBe("Other");
+  });
 });

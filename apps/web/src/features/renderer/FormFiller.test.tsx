@@ -377,4 +377,44 @@ describe("file upload field", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("not an accepted file type");
     expect(upload).not.toHaveBeenCalled();
   });
+
+  it("allows respondent to select 'Other' and specify custom text for choice fields", async () => {
+    const choiceOtherSchema: FormSchema = {
+      title: "Choice with Other",
+      sections: [
+        {
+          id: "s1",
+          fields: [
+            {
+              id: "flavor",
+              type: "multiple_choice",
+              label: "Favorite Flavor",
+              required: true,
+              options: [
+                { id: "vanilla", label: "Vanilla" },
+                { id: "chocolate", label: "Chocolate" },
+              ],
+              allowOther: true,
+            },
+          ],
+        },
+      ],
+    };
+
+    const { api, user } = setup({ schema: choiceOtherSchema });
+
+    const otherRadio = screen.getByLabelText(/^Other:/i);
+    await user.click(otherRadio);
+
+    const otherInput = screen.getByPlaceholderText(/Please specify/i);
+    await user.type(otherInput, "Strawberry Cheesecake");
+
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    await waitFor(() =>
+      expect(api.submit).toHaveBeenCalledWith("my-form", {
+        flavor: { other: "Strawberry Cheesecake" },
+      }),
+    );
+  });
 });

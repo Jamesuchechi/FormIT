@@ -75,17 +75,46 @@ function longText(f: FieldOf<"long_text">): z.ZodType<unknown> {
 
 function singleChoice(f: FieldOf<"multiple_choice" | "dropdown">): z.ZodType<unknown> {
   const ids = new Set(f.options.map((o) => o.id));
-  return z.string().refine((v) => ids.has(v), "Select a valid option");
+  const optionValidator = z.string().refine((v) => ids.has(v), "Select a valid option");
+  if (!f.allowOther) return optionValidator;
+
+  const otherValidator = z.object({
+    other: z
+      .string()
+      .trim()
+      .min(1, "Please specify an answer for 'Other'")
+      .max(LIMITS.maxShortTextLength, `Must be at most ${LIMITS.maxShortTextLength} characters`),
+  });
+
+  return z.union([optionValidator, otherValidator]);
 }
 
 function checkboxes(f: FieldOf<"checkboxes">): z.ZodType<unknown> {
   const ids = new Set(f.options.map((o) => o.id));
   const { minSelected, maxSelected } = f.validation;
+  const optionValidator = z.string().refine((v) => ids.has(v), "Select valid options");
+  const otherValidator = z.object({
+    other: z
+      .string()
+      .trim()
+      .min(1, "Please specify an answer for 'Other'")
+      .max(LIMITS.maxShortTextLength, `Must be at most ${LIMITS.maxShortTextLength} characters`),
+  });
+
+  const itemValidator = f.allowOther ? z.union([optionValidator, otherValidator]) : optionValidator;
+
   return z
-    .array(z.string().refine((v) => ids.has(v), "Select valid options"))
+    .array(itemValidator)
     .superRefine((arr, ctx) => {
-      if (new Set(arr).size !== arr.length) {
+      const stringIds = arr.filter((x): x is string => typeof x === "string");
+      if (new Set(stringIds).size !== stringIds.length) {
         ctx.addIssue({ code: "custom", message: "Duplicate selections" });
+      }
+      const otherCount = arr.filter(
+        (x) => typeof x === "object" && x !== null && "other" in x,
+      ).length;
+      if (otherCount > 1) {
+        ctx.addIssue({ code: "custom", message: "Only one 'Other' specification is allowed" });
       }
       if (minSelected !== undefined && arr.length < minSelected) {
         ctx.addIssue({ code: "custom", message: `Select at least ${minSelected}` });

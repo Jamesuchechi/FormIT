@@ -121,18 +121,21 @@ const multipleChoice = z.object({
   ...base,
   type: z.literal("multiple_choice"),
   options,
+  allowOther: z.boolean().default(false).optional(),
 });
 
 const dropdown = z.object({
   ...base,
   type: z.literal("dropdown"),
   options,
+  allowOther: z.boolean().default(false).optional(),
 });
 
 const checkboxes = z.object({
   ...base,
   type: z.literal("checkboxes"),
   options,
+  allowOther: z.boolean().default(false).optional(),
   validation: z
     .object({
       minSelected: z.number().int().min(0).optional(),
@@ -242,14 +245,20 @@ export type FormSchema = z.infer<typeof formSchema>;
 /* ------------------------------------------------------------------ */
 
 export type FileAnswer = { path: string; name: string; size: number; mime: string };
+export type OtherAnswer = { other: string };
 
 /**
  * Stored value per field type:
- *  short_text, long_text, multiple_choice, dropdown → string (option id for choices)
- *  checkboxes                                       → string[] of option ids
+ *  short_text, long_text, multiple_choice, dropdown → string (option id for choices) or { other: string }
+ *  checkboxes                                       → (string | { other: string })[]
  *  linear_scale                                     → integer
  *  date                                             → "YYYY-MM-DD"
  *  file_upload                                      → FileAnswer[]
  */
-export type AnswerValue = string | number | string[] | FileAnswer[];
+export type AnswerValue =
+  | string
+  | number
+  | (string | OtherAnswer)[]
+  | OtherAnswer
+  | FileAnswer[];
 export type Answers = Record<string, AnswerValue>;

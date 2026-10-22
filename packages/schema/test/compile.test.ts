@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateSubmission } from "../src/index.ts";
+import { validateSubmission, type FormSchema } from "../src/index.ts";
 import { form } from "./fixtures.ts";
 
 const base = { name: "James", role: "dev", score: 5 };
@@ -119,5 +119,71 @@ describe("validateSubmission", () => {
       why_low_followup: "no",
     });
     expect(r3.success).toBe(true);
+  });
+
+  it("validates choice fields with allowOther", () => {
+    const s1 = form.sections[0]!;
+    const formWithOther: FormSchema = {
+      ...form,
+      sections: [
+        {
+          ...s1,
+          fields: [
+            ...s1.fields,
+            {
+              id: "choice_with_other",
+              type: "multiple_choice" as const,
+              label: "Role",
+              required: true,
+              options: [{ id: "opt_1", label: "Developer" }],
+              allowOther: true,
+            },
+            {
+              id: "checkbox_with_other",
+              type: "checkboxes" as const,
+              label: "Skills",
+              required: false,
+              options: [{ id: "opt_s1", label: "React" }],
+              allowOther: true,
+              validation: {},
+            },
+          ],
+        },
+      ],
+    };
+
+    // Valid option id
+    expect(
+      validateSubmission(formWithOther, {
+        ...base,
+        choice_with_other: "opt_1",
+      }).success,
+    ).toBe(true);
+
+    // Valid { other: "Designer" }
+    expect(
+      validateSubmission(formWithOther, {
+        ...base,
+        choice_with_other: { other: "Designer" },
+        checkbox_with_other: ["opt_s1", { other: "Figma" }],
+      }).success,
+    ).toBe(true);
+
+    // Blank other is rejected for required field
+    expect(
+      validateSubmission(formWithOther, {
+        ...base,
+        choice_with_other: { other: "   " },
+      }).success,
+    ).toBe(false);
+
+    // Multiple others in checkboxes is rejected
+    expect(
+      validateSubmission(formWithOther, {
+        ...base,
+        choice_with_other: "opt_1",
+        checkbox_with_other: [{ other: "Figma" }, { other: "Sketch" }],
+      }).success,
+    ).toBe(false);
   });
 });

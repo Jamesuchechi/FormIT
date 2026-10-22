@@ -97,8 +97,8 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 - [x] Email receipt to respondent (optional per form)
 - [x] Response editing by respondent via a private edit link
 - [x] Question bank: save and reuse field definitions
-- [ ] Import from CSV / paste a list of options
-- [ ] "Other" option on choice fields
+- [x] Import from CSV / paste a list of options
+- [x] "Other" option on choice fields
 - [ ] Choice shuffling and randomized option order
 - [ ] Per-field description images
 - [ ] Keyboard shortcuts in builder

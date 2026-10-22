@@ -61,13 +61,23 @@ export function formatAnswer(field: Field, value: AnswerValue | undefined): stri
   switch (field.type) {
     case "multiple_choice":
     case "dropdown": {
+      if (typeof value === "object" && value !== null && "other" in value) {
+        return `Other: ${(value as { other: string }).other}`;
+      }
       const id = String(value);
       return optionsOf(field).find((o) => o.id === id)?.label ?? id;
     }
     case "checkboxes": {
       if (!Array.isArray(value)) return String(value);
       const opts = optionsOf(field);
-      return (value as string[]).map((id) => opts.find((o) => o.id === id)?.label ?? id).join("; ");
+      return (value as (string | { other: string })[])
+        .map((item) => {
+          if (typeof item === "object" && item !== null && "other" in item) {
+            return `Other: ${item.other}`;
+          }
+          return opts.find((o) => o.id === item)?.label ?? String(item);
+        })
+        .join("; ");
     }
     case "file_upload":
       return isFileAnswers(value) ? value.map((f) => f.name).join("; ") : "";
@@ -130,9 +140,18 @@ export function summarize(
       // Seed with current options so zero-count choices still show.
       for (const o of optionsOf(field)) counts.set(o.id, { label: o.label, count: 0 });
       for (const { r, v } of values) {
-        const ids = Array.isArray(v) ? (v as string[]) : [String(v)];
+        const rawItems = Array.isArray(v)
+          ? (v as (string | { other: string })[])
+          : [v as string | { other: string }];
         const old = fieldForResponse(r, field.id, versions, field);
-        for (const id of ids) {
+        for (const item of rawItems) {
+          if (typeof item === "object" && item !== null && "other" in item) {
+            const entry = counts.get("__other__") ?? { label: "Other", count: 0 };
+            entry.count += 1;
+            counts.set("__other__", entry);
+            continue;
+          }
+          const id = String(item);
           const entry = counts.get(id) ?? {
             label: optionsOf(old).find((o) => o.id === id)?.label ?? id,
             count: 0,

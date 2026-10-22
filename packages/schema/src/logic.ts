@@ -7,11 +7,15 @@ export function allFields(form: FormSchema): Field[] {
   return form.sections.flatMap((s) => s.fields);
 }
 
-/** "Answered" means non-null, non-blank string, or non-empty array. 0 and false count. */
+/** "Answered" means non-null, non-blank string, non-empty array, or non-blank { other: string }. 0 and false count. */
 export function isAnswered(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === "string") return value.trim() !== "";
   if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object" && value !== null && "other" in value) {
+    const o = (value as { other: unknown }).other;
+    return typeof o === "string" && o.trim() !== "";
+  }
   return true;
 }
 
@@ -37,6 +41,16 @@ function toComparable(a: unknown, b: unknown): [number, number] | [string, strin
 }
 
 function equals(actual: unknown, expected: unknown): boolean {
+  if (expected === "__other__") {
+    if (typeof actual === "object" && actual !== null && "other" in actual) {
+      return isAnswered(actual);
+    }
+    if (Array.isArray(actual)) {
+      return actual.some((x) => typeof x === "object" && x !== null && "other" in x && isAnswered(x));
+    }
+    return false;
+  }
+
   if (Array.isArray(actual)) {
     // Arrays (checkboxes) compare as sets; a scalar expected value means "exactly this one".
     const want = Array.isArray(expected) ? expected : [expected];

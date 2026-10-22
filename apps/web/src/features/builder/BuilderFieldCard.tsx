@@ -5,6 +5,7 @@ import {
   BookmarkPlus,
   Calendar,
   Copy,
+  FileSpreadsheet,
   GripVertical,
   Plus,
   Trash2,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { SaveQuestionModal } from "../questionBank/SaveQuestionModal.tsx";
+import { ImportOptionsModal } from "./ImportOptionsModal.tsx";
 import type { BuilderActions } from "./types.ts";
 
 interface BuilderFieldCardProps {
@@ -43,6 +45,7 @@ export function BuilderFieldCard({
   };
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   function handleAddOption() {
     if (
@@ -258,16 +261,62 @@ export function BuilderFieldCard({
                   )}
                 </div>
               ))}
+
+              {field.allowOther && (
+                <div className="flex items-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-50/70 px-3 py-2 text-xs text-neutral-500">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-neutral-200 text-[10px] font-bold text-neutral-600">
+                    {field.options.length + 1}
+                  </span>
+                  <span className="flex-1 italic">Other: [Respondent enters text]</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      actions.updateField(sectionId, field.id, {
+                        allowOther: false,
+                      } as unknown as Partial<Field>)
+                    }
+                    title="Remove Other option"
+                    className="text-neutral-400 hover:text-red-600 cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={handleAddOption}
-              style={{ color: accentColor }}
-              className="flex items-center gap-1.5 text-xs font-semibold hover:opacity-80 pt-1 cursor-pointer"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add Option
-            </button>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleAddOption}
+                style={{ color: accentColor }}
+                className="flex items-center gap-1.5 text-xs font-semibold hover:opacity-80 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Option
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 cursor-pointer"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-neutral-500" />
+                Import / Paste
+              </button>
+              {!field.allowOther && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    actions.updateField(sectionId, field.id, {
+                      allowOther: true,
+                    } as unknown as Partial<Field>)
+                  }
+                  className="flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-indigo-600 cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add "Other"
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -299,16 +348,60 @@ export function BuilderFieldCard({
                   )}
                 </div>
               ))}
+
+              {field.allowOther && (
+                <div className="flex items-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-50/70 px-3 py-2 text-xs text-neutral-500">
+                  <div className="h-4 w-4 rounded border border-dashed border-neutral-400 bg-white" />
+                  <span className="flex-1 italic">Other: [Respondent enters text]</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      actions.updateField(sectionId, field.id, {
+                        allowOther: false,
+                      } as unknown as Partial<Field>)
+                    }
+                    title="Remove Other option"
+                    className="text-neutral-400 hover:text-red-600 cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={handleAddOption}
-              style={{ color: accentColor }}
-              className="flex items-center gap-1.5 text-xs font-semibold hover:opacity-80 pt-1 cursor-pointer"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add Option
-            </button>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleAddOption}
+                style={{ color: accentColor }}
+                className="flex items-center gap-1.5 text-xs font-semibold hover:opacity-80 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Option
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 cursor-pointer"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-neutral-500" />
+                Import / Paste
+              </button>
+              {!field.allowOther && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    actions.updateField(sectionId, field.id, {
+                      allowOther: true,
+                    } as unknown as Partial<Field>)
+                  }
+                  className="flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-indigo-600 cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add "Other"
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -340,15 +433,61 @@ export function BuilderFieldCard({
                   )}
                 </div>
               ))}
+
+              {field.allowOther && (
+                <div className="flex items-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50/70 px-2.5 py-1.5 text-xs text-neutral-500">
+                  <span className="text-[10px] text-neutral-400">
+                    {field.options.length + 1}.
+                  </span>
+                  <span className="flex-1 italic">Other: [Respondent enters text]</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      actions.updateField(sectionId, field.id, {
+                        allowOther: false,
+                      } as unknown as Partial<Field>)
+                    }
+                    title="Remove Other option"
+                    className="text-neutral-400 hover:text-red-600 cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={handleAddOption}
-              className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 pt-1"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add Option
-            </button>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleAddOption}
+                className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Option
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 cursor-pointer"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-neutral-500" />
+                Import / Paste
+              </button>
+              {!field.allowOther && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    actions.updateField(sectionId, field.id, {
+                      allowOther: true,
+                    } as unknown as Partial<Field>)
+                  }
+                  className="flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-indigo-600 cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add "Other"
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -407,6 +546,19 @@ export function BuilderFieldCard({
         field={field}
         onClose={() => setIsSaveModalOpen(false)}
       />
+
+      {"options" in field && (
+        <ImportOptionsModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          currentOptions={(field as { options: FieldOption[] }).options || []}
+          onImport={(newOptions) =>
+            actions.updateField(sectionId, field.id, {
+              options: newOptions,
+            } as unknown as Partial<Field>)
+          }
+        />
+      )}
     </div>
   );
 }
