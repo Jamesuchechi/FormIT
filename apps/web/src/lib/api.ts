@@ -129,6 +129,10 @@ export type FormSettings = {
   oneResponsePerUser?: boolean;
   maxResponses?: number;
   confirmationMessage?: string;
+  notifyOwnerOnSubmission?: boolean;
+  notificationEmail?: string;
+  sendRespondentReceipt?: boolean;
+  receiptEmailFieldId?: string;
 };
 
 export type FormRecord = {

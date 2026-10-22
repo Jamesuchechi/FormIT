@@ -12,7 +12,8 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Plus, Trash2 } from "lucide-react";
+import { Palette, Plus, Trash2 } from "lucide-react";
+import type { CSSProperties } from "react";
 import { BuilderFieldCard } from "./BuilderFieldCard.tsx";
 import type { BuilderActions, BuilderState } from "./types.ts";
 
@@ -23,6 +24,15 @@ interface BuilderCanvasProps {
 
 export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
   const { schema, selectedFieldId, selectedSectionId } = state;
+
+  const accentColor = schema.theme?.accentColor || "#4f46e5";
+  const fontClass =
+    schema.theme?.font === "serif"
+      ? "font-serif"
+      : schema.theme?.font === "mono"
+        ? "font-mono"
+        : "font-sans";
+  const headerImage = schema.theme?.headerImage;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -45,11 +55,44 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
   return (
     <main
       onClick={() => actions.selectField(null)}
-      className="flex-1 bg-neutral-100/60 p-4 sm:p-8 overflow-y-auto min-h-[calc(100vh-4rem)]"
+      style={{ "--accent-color": accentColor } as CSSProperties}
+      className={`flex-1 bg-neutral-100/60 p-4 sm:p-8 overflow-y-auto min-h-[calc(100vh-4rem)] ${fontClass}`}
     >
       <div className="mx-auto max-w-3xl space-y-6">
+        {/* Optional Header Image Banner in Builder Canvas */}
+        {headerImage && (
+          <div className="relative overflow-hidden rounded-2xl max-h-56 w-full shadow-xs border border-neutral-200 bg-white group">
+            <img
+              src={headerImage}
+              alt="Form header banner"
+              className="w-full h-40 sm:h-48 object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => actions.setActiveTab("theme")}
+              className="absolute top-3 right-3 rounded-lg bg-neutral-900/70 hover:bg-neutral-900 text-white text-xs px-2.5 py-1 backdrop-blur-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Palette className="h-3.5 w-3.5" />
+              Customize theme
+            </button>
+          </div>
+        )}
+
         {/* Form Title & Description Header Card */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs border-t-4 border-t-indigo-600">
+        <div
+          style={{ borderTopColor: accentColor }}
+          className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs border-t-4"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <button
+              type="button"
+              onClick={() => actions.setActiveTab("theme")}
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
+            >
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: accentColor }} />
+              <span>Theme: {schema.theme?.font || "sans"} • {accentColor}</span>
+            </button>
+          </div>
           <input
             type="text"
             value={schema.title}
@@ -85,7 +128,10 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
               {/* Section Header Card */}
               <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
+                  <span
+                    className="text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: accentColor }}
+                  >
                     Section {secIdx + 1} of {schema.sections.length}
                   </span>
                   {schema.sections.length > 1 && (
@@ -138,6 +184,7 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
                           isSelected={field.id === selectedFieldId}
                           onSelect={() => actions.selectField(field.id, section.id)}
                           actions={actions}
+                          accentColor={accentColor}
                         />
 
                         {/* Inline Insertion Line */}
@@ -148,7 +195,8 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
                               e.stopPropagation();
                               actions.addField(section.id, "short_text", field.id);
                             }}
-                            className="flex items-center gap-1 rounded-full bg-indigo-600 px-3 py-0.5 text-[10px] font-medium text-white shadow-md hover:bg-indigo-500 hover:scale-105 transition-all"
+                            style={{ backgroundColor: accentColor }}
+                            className="flex items-center gap-1 rounded-full px-3 py-0.5 text-[10px] font-medium text-white shadow-md hover:scale-105 transition-all"
                           >
                             <Plus className="h-3 w-3" />
                             Add Question Here
@@ -167,7 +215,8 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
                   <button
                     type="button"
                     onClick={() => actions.addField(section.id, "short_text")}
-                    className="mt-3 inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 shadow-xs"
+                    style={{ backgroundColor: accentColor }}
+                    className="mt-3 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white shadow-xs"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Add Question

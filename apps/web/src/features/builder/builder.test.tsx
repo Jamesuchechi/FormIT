@@ -8,6 +8,8 @@ import { BuilderCanvas } from "./BuilderCanvas.tsx";
 import { BuilderHeader } from "./BuilderHeader.tsx";
 import { FieldInspector } from "./FieldInspector.tsx";
 import { FieldPalette } from "./FieldPalette.tsx";
+import { FormSettingsTab } from "./FormSettingsTab.tsx";
+import { FormThemeTab } from "./FormThemeTab.tsx";
 import { useBuilderState } from "./useBuilderState.ts";
 
 const mockSchema: FormSchema = {
@@ -268,4 +270,72 @@ describe("Builder - UI Components", () => {
     // Shows Unsaved changes
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
   });
+
+  it("updates form theme (accentColor, font, darkMode, headerImage)", async () => {
+    const user = userEvent.setup();
+    const { result } = renderHook(() => useBuilderState(mockFormRecord));
+
+    act(() => {
+      result.current.actions.updateTheme({
+        accentColor: "#059669",
+        font: "serif",
+        darkMode: "dark",
+        headerImage: "https://example.com/cover.jpg",
+      });
+    });
+
+    expect(result.current.state.schema.theme?.accentColor).toBe("#059669");
+    expect(result.current.state.schema.theme?.font).toBe("serif");
+    expect(result.current.state.schema.theme?.darkMode).toBe("dark");
+    expect(result.current.state.schema.theme?.headerImage).toBe("https://example.com/cover.jpg");
+    expect(result.current.state.hasUnsavedChanges).toBe(true);
+
+    // Render FormThemeTab
+    render(<FormThemeTab state={result.current.state} actions={result.current.actions} />);
+
+    expect(screen.getByText("Theme & Styling")).toBeInTheDocument();
+    expect(screen.getByText("Editorial Serif")).toBeInTheDocument();
+    expect(screen.getByText("Dark Mode")).toBeInTheDocument();
+
+    // Click another color preset like Amber
+    const amberBtn = screen.getByRole("button", { name: /select amber accent color/i });
+    await user.click(amberBtn);
+    expect(result.current.state.schema.theme?.accentColor).toBe("#d97706");
+  });
+
+  it("updates email notifications and respondent receipt settings in FormSettingsTab", async () => {
+    const user = userEvent.setup();
+    const { result } = renderHook(() => useBuilderState(mockFormRecord));
+
+    // Initially disabled
+    expect(result.current.state.form.settings.notifyOwnerOnSubmission).toBeFalsy();
+    expect(result.current.state.form.settings.sendRespondentReceipt).toBeFalsy();
+
+    // Verify actions.updateSettings updates settings state correctly
+    act(() => {
+      result.current.actions.updateSettings({
+        notifyOwnerOnSubmission: true,
+        notificationEmail: "alerts@company.com",
+        sendRespondentReceipt: true,
+      });
+    });
+
+    expect(result.current.state.form.settings.notifyOwnerOnSubmission).toBe(true);
+    expect(result.current.state.form.settings.notificationEmail).toBe("alerts@company.com");
+    expect(result.current.state.form.settings.sendRespondentReceipt).toBe(true);
+
+    // Verify rendered FormSettingsTab reflects settings
+    render(<FormSettingsTab state={result.current.state} actions={result.current.actions} />);
+
+    expect(screen.getByText("Email Notifications")).toBeInTheDocument();
+    const notifyOwnerToggle = screen.getByLabelText(/notify me on every new response/i);
+    expect(notifyOwnerToggle).toBeChecked();
+
+    const emailInput = screen.getByPlaceholderText("owner@example.com");
+    expect(emailInput).toHaveValue("alerts@company.com");
+
+    const receiptToggle = screen.getByLabelText(/send email receipt to respondent/i);
+    expect(receiptToggle).toBeChecked();
+  });
 });
+

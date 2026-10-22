@@ -9,6 +9,7 @@ import {
   Table2,
   Sliders,
   Undo2,
+  Palette,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -87,6 +88,18 @@ export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
           >
             <Sliders className="h-3.5 w-3.5" />
             Builder
+          </button>
+          <button
+            type="button"
+            onClick={() => actions.setActiveTab("theme")}
+            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+              activeTab === "theme"
+                ? "bg-white text-neutral-900 shadow-sm"
+                : "text-neutral-600 hover:text-neutral-900"
+            }`}
+          >
+            <Palette className="h-3.5 w-3.5" />
+            Theme
           </button>
           <button
             type="button"

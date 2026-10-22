@@ -1,6 +1,6 @@
-import { isValidSlug } from "@formit/schema";
-import { Check, Globe, Lock, ShieldCheck, Timer } from "lucide-react";
-import { useState } from "react";
+import { isValidSlug, allFields } from "@formit/schema";
+import { Check, Globe, Lock, Mail, ShieldCheck, Timer } from "lucide-react";
+import { useMemo, useState } from "react";
 import { isSlugAvailable } from "../../lib/api.ts";
 import type { BuilderActions, BuilderState } from "./types.ts";
 
@@ -10,11 +10,22 @@ interface FormSettingsTabProps {
 }
 
 export function FormSettingsTab({ state, actions }: FormSettingsTabProps) {
-  const { form } = state;
+  const { form, schema } = state;
   const [slugInput, setSlugInput] = useState(form.slug);
   const [slugChecking, setSlugChecking] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [slugSaved, setSlugSaved] = useState(false);
+
+  // Find fields that could be email inputs (short_text with email format, or label mentioning email)
+  const availableEmailFields = useMemo(() => {
+    const list = allFields(schema);
+    return list.filter((f) => {
+      if (f.type !== "short_text") return false;
+      const fmt = (f as { validation?: { format?: string } }).validation?.format;
+      const labelLower = f.label.toLowerCase();
+      return fmt === "email" || labelLower.includes("email") || labelLower.includes("e-mail");
+    });
+  }, [schema]);
 
   async function handleSaveSlug() {
     const clean = slugInput.trim().toLowerCase();
@@ -190,6 +201,125 @@ export function FormSettingsTab({ state, actions }: FormSettingsTabProps) {
                 className="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Email Notifications & Receipts */}
+        <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs space-y-4">
+          <div className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-indigo-600" />
+            <h3 className="text-sm font-semibold text-neutral-900">Email Notifications</h3>
+          </div>
+          <p className="text-xs text-neutral-500">
+            Get instant alerts when people respond, and optionally send an automated confirmation receipt copy to the respondent.
+          </p>
+
+          <div className="space-y-4 text-xs pt-1">
+            {/* Owner notification toggle */}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <label
+                  htmlFor="setting-notifyowner"
+                  className="font-medium text-neutral-900 block cursor-pointer"
+                >
+                  Notify me on every new response
+                </label>
+                <p className="text-neutral-500">
+                  Dispatches an email summary alert to you whenever someone submits this form.
+                </p>
+              </div>
+              <input
+                id="setting-notifyowner"
+                type="checkbox"
+                checked={form.settings.notifyOwnerOnSubmission ?? false}
+                onChange={(e) =>
+                  actions.updateSettings({ notifyOwnerOnSubmission: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              />
+            </div>
+
+            {form.settings.notifyOwnerOnSubmission && (
+              <div className="pl-0 sm:pl-4 border-l-2 border-indigo-200 py-1 space-y-1">
+                <label
+                  htmlFor="setting-notification-email"
+                  className="font-medium text-neutral-800 block text-[11px]"
+                >
+                  Notification recipient email (optional, defaults to your account email)
+                </label>
+                <input
+                  id="setting-notification-email"
+                  type="email"
+                  value={form.settings.notificationEmail ?? ""}
+                  onChange={(e) =>
+                    actions.updateSettings({ notificationEmail: e.target.value })
+                  }
+                  placeholder="owner@example.com"
+                  className="w-full sm:w-80 rounded-lg border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+            )}
+
+            {/* Respondent receipt toggle */}
+            <div className="border-t border-neutral-100 pt-3 flex items-start justify-between gap-4">
+              <div>
+                <label
+                  htmlFor="setting-sendreceipt"
+                  className="font-medium text-neutral-900 block cursor-pointer"
+                >
+                  Send email receipt to respondent
+                </label>
+                <p className="text-neutral-500">
+                  Sends an automated confirmation email with their submission details to their email address.
+                </p>
+              </div>
+              <input
+                id="setting-sendreceipt"
+                type="checkbox"
+                checked={form.settings.sendRespondentReceipt ?? false}
+                onChange={(e) =>
+                  actions.updateSettings({ sendRespondentReceipt: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              />
+            </div>
+
+            {form.settings.sendRespondentReceipt && (
+              <div className="pl-0 sm:pl-4 border-l-2 border-indigo-200 py-1 space-y-2">
+                <label
+                  htmlFor="setting-receipt-field"
+                  className="font-medium text-neutral-800 block text-[11px]"
+                >
+                  Select email question in your form
+                </label>
+                {availableEmailFields.length > 0 ? (
+                  <select
+                    id="setting-receipt-field"
+                    value={form.settings.receiptEmailFieldId ?? ""}
+                    onChange={(e) =>
+                      actions.updateSettings({
+                        receiptEmailFieldId: e.target.value || undefined,
+                      })
+                    }
+                    className="w-full sm:w-80 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs text-neutral-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">-- Choose email field --</option>
+                    {availableEmailFields.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.label} ({f.id})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800">
+                    No email questions found in your form. Add a Short Text question with "Email" format to send receipts to respondents.
+                  </div>
+                )}
+                <p className="text-[11px] text-neutral-400">
+                  If respondent is signed in, their account email will be used as a fallback if the selected field is left empty.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

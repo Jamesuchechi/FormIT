@@ -7,6 +7,7 @@ import { BuilderHeader } from "../features/builder/BuilderHeader.tsx";
 import { FieldInspector } from "../features/builder/FieldInspector.tsx";
 import { FieldPalette } from "../features/builder/FieldPalette.tsx";
 import { FormSettingsTab } from "../features/builder/FormSettingsTab.tsx";
+import { FormThemeTab } from "../features/builder/FormThemeTab.tsx";
 import { useBuilderState } from "../features/builder/useBuilderState.ts";
 import { FormFiller } from "../features/renderer/FormFiller.tsx";
 import { getOwnerForm, type FillApi, type PublicForm } from "../lib/api.ts";
@@ -154,6 +155,21 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
     ],
   );
 
+  const [isSystemDark, setIsSystemDark] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    setIsSystemDark(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsSystemDark(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  const previewTheme = state.schema.theme;
+  const isPreviewDark =
+    previewTheme?.darkMode === "dark" ||
+    (previewTheme?.darkMode === "auto" && isSystemDark);
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-neutral-100">
       {/* Top Builder Navigation */}
@@ -177,6 +193,12 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
         {state.activeTab === "settings" && (
           <div className="flex-1 overflow-y-auto bg-neutral-50/50 p-6 sm:p-10">
             <FormSettingsTab state={state} actions={actions} />
+          </div>
+        )}
+
+        {state.activeTab === "theme" && (
+          <div className="flex flex-1 overflow-hidden">
+            <FormThemeTab state={state} actions={actions} />
           </div>
         )}
 
@@ -217,12 +239,20 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
             </div>
 
             {/* Form Renderer Container */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-10 flex justify-center">
+            <div
+              className={`flex-1 overflow-y-auto p-6 sm:p-10 flex justify-center transition-colors duration-200 ${
+                isPreviewDark ? "bg-neutral-950" : "bg-neutral-100"
+              }`}
+            >
               <div
                 className={`w-full transition-all duration-300 ${
+                  isPreviewDark
+                    ? "dark bg-neutral-900 border-neutral-800 text-neutral-100 shadow-2xl"
+                    : "bg-white border-neutral-200 text-neutral-900 shadow-sm"
+                } ${
                   previewDevice === "mobile"
-                    ? "max-w-sm rounded-[2.5rem] border-[10px] border-neutral-800 bg-white p-6 shadow-2xl my-auto min-h-[600px]"
-                    : "max-w-2xl rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm my-auto"
+                    ? "max-w-sm rounded-[2.5rem] border-[10px] border-neutral-800 p-6 my-auto min-h-[600px]"
+                    : "max-w-2xl rounded-2xl border p-8 my-auto"
                 }`}
               >
                 <FormFiller form={previewPublicForm} api={previewApi} />

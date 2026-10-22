@@ -195,6 +195,28 @@ export type Field = z.infer<typeof fieldSchema>;
 export type FieldOf<T extends FieldType> = Extract<Field, { type: T }>;
 
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* Themes                                                              */
+/* ------------------------------------------------------------------ */
+
+export const THEME_FONTS = ["sans", "serif", "mono"] as const;
+export type ThemeFont = (typeof THEME_FONTS)[number];
+
+export const THEME_MODES = ["auto", "light", "dark"] as const;
+export type ThemeMode = (typeof THEME_MODES)[number];
+
+export const themeSchema = z.object({
+  accentColor: z
+    .string()
+    .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Accent color must be a valid hex color code")
+    .default("#4f46e5"),
+  font: z.enum(THEME_FONTS).default("sans"),
+  headerImage: z.string().max(2048).optional(),
+  darkMode: z.enum(THEME_MODES).default("auto"),
+});
+export type FormTheme = z.infer<typeof themeSchema>;
+
+/* ------------------------------------------------------------------ */
 /* Form                                                                */
 /* ------------------------------------------------------------------ */
 
@@ -210,6 +232,7 @@ export type Section = z.infer<typeof sectionSchema>;
 export const formSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().max(2_000).optional(),
+  theme: themeSchema.optional(),
   sections: z.array(sectionSchema).min(1).max(LIMITS.maxSections),
 });
 export type FormSchema = z.infer<typeof formSchema>;

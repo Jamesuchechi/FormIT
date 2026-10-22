@@ -16,7 +16,7 @@ export function LinearScaleInput({ field, value, onChange, ctl }: FieldInputProp
               checked={value === n}
               onChange={() => onChange(n)}
               aria-describedby={ctl.describedBy}
-              className="size-5 accent-indigo-600"
+              className="size-5 accent-[var(--accent-color,#4f46e5)]"
             />
           </label>
         ))}

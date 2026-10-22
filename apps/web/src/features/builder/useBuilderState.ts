@@ -4,6 +4,7 @@ import {
   type Field,
   type FieldType,
   type FormSchema,
+  type FormTheme,
   type Rule,
   type Section,
 } from "@formit/schema";
@@ -15,6 +16,7 @@ function getFormSnapshot(schema: FormSchema, form: FormRecord): string {
   return JSON.stringify({
     title: schema.title,
     description: schema.description,
+    theme: schema.theme,
     sections: schema.sections,
     settings: form.settings,
     status: form.status,
@@ -375,6 +377,22 @@ export function useBuilderState(initialForm: FormRecord): {
     }
   }, [historyIndex, history]);
 
+  const updateTheme = useCallback(
+    (themeUpdates: Partial<FormTheme>) => {
+      commitSchema((prev) => ({
+        ...prev,
+        theme: {
+          accentColor: prev.theme?.accentColor ?? "#4f46e5",
+          font: prev.theme?.font ?? "sans",
+          darkMode: prev.theme?.darkMode ?? "auto",
+          headerImage: prev.theme?.headerImage,
+          ...themeUpdates,
+        },
+      }));
+    },
+    [commitSchema],
+  );
+
   const saveNow = useCallback(async () => {
     setIsSaving(true);
     try {
@@ -429,6 +447,7 @@ export function useBuilderState(initialForm: FormRecord): {
       updateSettings,
       updateStatus,
       updateSlug,
+      updateTheme,
       undo,
       redo,
       saveNow,

@@ -10,6 +10,7 @@ interface BuilderFieldCardProps {
   isSelected: boolean;
   onSelect: () => void;
   actions: BuilderActions;
+  accentColor?: string;
 }
 
 export function BuilderFieldCard({
@@ -18,6 +19,7 @@ export function BuilderFieldCard({
   isSelected,
   onSelect,
   actions,
+  accentColor = "#4f46e5",
 }: BuilderFieldCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
@@ -78,7 +80,15 @@ export function BuilderFieldCard({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{
+        ...style,
+        ...(isSelected
+          ? {
+              borderColor: accentColor,
+              boxShadow: `0 0 0 2px ${accentColor}25`,
+            }
+          : {}),
+      }}
       onClick={(e) => {
         e.stopPropagation();
         onSelect();
@@ -87,7 +97,7 @@ export function BuilderFieldCard({
         isDragging
           ? "opacity-50 border-indigo-400 shadow-lg z-20"
           : isSelected
-            ? "border-indigo-500 ring-2 ring-indigo-500/20 shadow-md"
+            ? "shadow-md"
             : "border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
       }`}
     >
@@ -225,7 +235,8 @@ export function BuilderFieldCard({
             <button
               type="button"
               onClick={handleAddOption}
-              className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 pt-1"
+              style={{ color: accentColor }}
+              className="flex items-center gap-1.5 text-xs font-semibold hover:opacity-80 pt-1 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Option
@@ -265,7 +276,8 @@ export function BuilderFieldCard({
             <button
               type="button"
               onClick={handleAddOption}
-              className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 pt-1"
+              style={{ color: accentColor }}
+              className="flex items-center gap-1.5 text-xs font-semibold hover:opacity-80 pt-1 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Option

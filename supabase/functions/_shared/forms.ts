@@ -6,6 +6,8 @@ export const SLUG = /^[a-z0-9][a-z0-9-]{2,62}$/;
 
 export type OpenForm = {
   id: string;
+  ownerId: string;
+  title: string;
   schemaVersion: number;
   schema: FormSchema;
   settings: {
@@ -13,6 +15,10 @@ export type OpenForm = {
     requireSignIn: boolean;
     oneResponsePerUser: boolean;
     confirmationMessage: string | null;
+    notifyOwnerOnSubmission: boolean;
+    notificationEmail: string | null;
+    sendRespondentReceipt: boolean;
+    receiptEmailFieldId: string | null;
   };
 };
 
@@ -20,7 +26,7 @@ export type OpenForm = {
 export async function loadOpenForm(slug: string): Promise<OpenForm> {
   const { data, error } = await admin
     .from("forms")
-    .select("id, schema, schema_version, settings, status, opens_at, closes_at")
+    .select("id, owner_id, title, schema, schema_version, settings, status, opens_at, closes_at")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -44,12 +50,18 @@ export async function loadOpenForm(slug: string): Promise<OpenForm> {
   const oneResponsePerUser = s.oneResponsePerUser === true;
   return {
     id: data.id,
+    ownerId: data.owner_id,
+    title: data.title || "Untitled Form",
     schemaVersion: data.schema_version,
     schema: parsed.data,
     settings: {
       requireSignIn: s.requireSignIn === true || oneResponsePerUser,
       oneResponsePerUser,
       confirmationMessage: typeof s.confirmationMessage === "string" ? s.confirmationMessage : null,
+      notifyOwnerOnSubmission: s.notifyOwnerOnSubmission === true,
+      notificationEmail: typeof s.notificationEmail === "string" && s.notificationEmail.trim() ? s.notificationEmail.trim() : null,
+      sendRespondentReceipt: s.sendRespondentReceipt === true,
+      receiptEmailFieldId: typeof s.receiptEmailFieldId === "string" ? s.receiptEmailFieldId : null,
     },
   };
 }

@@ -1,7 +1,7 @@
-import type { Field, FieldType, FormSchema, Rule, Section } from "@formit/schema";
+import type { Field, FieldType, FormSchema, FormTheme, Rule, Section } from "@formit/schema";
 import type { FormRecord, FormSettings } from "../../lib/api.ts";
 
-export type BuilderTab = "builder" | "preview" | "settings";
+export type BuilderTab = "builder" | "theme" | "preview" | "settings";
 
 export interface BuilderState {
   form: FormRecord;
@@ -40,6 +40,9 @@ export interface BuilderActions {
   reorderFields: (sectionId: string, activeId: string, overId: string) => void;
   changeFieldType: (sectionId: string, fieldId: string, newType: FieldType) => void;
   updateFieldRule: (sectionId: string, fieldId: string, rule: Rule | undefined) => void;
+
+  // Theme actions
+  updateTheme: (theme: Partial<FormTheme>) => void;
 
   // Form Settings
   updateSettings: (settings: Partial<FormSettings>) => void;

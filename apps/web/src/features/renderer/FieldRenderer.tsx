@@ -60,7 +60,7 @@ export function FieldRenderer({ field, value, errors, onChange, onUpload }: Prop
   );
 
   const card =
-    "rounded-xl border border-neutral-200 bg-white p-5 shadow-sm data-[invalid=true]:border-red-300";
+    "rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-5 shadow-sm text-neutral-900 dark:text-neutral-100 data-[invalid=true]:border-red-300 dark:data-[invalid=true]:border-red-500/50";
 
   return GROUP_TYPES.has(field.type) ? (
     <fieldset id={`field-${field.id}`} data-invalid={invalid} className={card}>

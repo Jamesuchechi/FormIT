@@ -18,7 +18,7 @@ export function MultipleChoiceInput({
             checked={value === o.id}
             onChange={() => onChange(o.id)}
             aria-describedby={ctl.describedBy}
-            className="size-4 accent-indigo-600"
+            className="size-4 accent-[var(--accent-color,#4f46e5)]"
           />
           <span>{o.label}</span>
         </label>
@@ -52,7 +52,7 @@ export function CheckboxesInput({ field, value, onChange, ctl }: FieldInputProps
               disabled={atMax && !checked}
               onChange={() => toggle(o.id)}
               aria-describedby={ctl.describedBy}
-              className="size-4 accent-indigo-600"
+              className="size-4 accent-[var(--accent-color,#4f46e5)]"
             />
             <span>{o.label}</span>
           </label>
