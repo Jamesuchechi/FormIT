@@ -91,7 +91,7 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 
 ## v1.1: quality of life
 
-- [ ] Form templates (contact, feedback, RSVP, job application, event registration)
+- [x] Form templates (contact, feedback, RSVP, job application, event registration)
 - [ ] Themes: accent color, font, header image, dark mode on fill page
 - [ ] Email notification to owner on new response
 - [ ] Email receipt to respondent (optional per form)

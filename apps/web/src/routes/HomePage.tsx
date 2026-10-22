@@ -1,4 +1,4 @@
-import { FIELD_REGISTRY, FIELD_TYPES } from "@formit/schema";
+import { FIELD_REGISTRY, FIELD_TYPES, type FormSchema } from "@formit/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -28,6 +28,8 @@ import { ShareDialog } from "../components/ShareDialog.tsx";
 import { FormitLogo } from "../components/FormitLogo.tsx";
 import { GithubIcon } from "../components/icons.tsx";
 import { useAuth } from "../features/auth/AuthContext.tsx";
+import { instantiateTemplate, type FormTemplate } from "../features/templates/templates.ts";
+import { TemplatePickerModal } from "../features/templates/TemplatePickerModal.tsx";
 import {
   createForm,
   deleteForm,
@@ -686,6 +688,7 @@ function DashboardView() {
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [shareTarget, setShareTarget] = useState<FormRecord | null>(null);
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
 
   const {
     data: forms,
@@ -698,12 +701,24 @@ function DashboardView() {
   });
 
   const createMutation = useMutation({
-    mutationFn: () => createForm({ title: "Untitled Form" }),
+    mutationFn: (args?: { title?: string; schema?: FormSchema }) =>
+      createForm(args ?? { title: "Untitled Form" }),
     onSuccess: (newForm) => {
       queryClient.invalidateQueries({ queryKey: ["user-forms"] });
       navigate(`/forms/${newForm.id}/edit`);
     },
   });
+
+  function handleSelectBlank() {
+    setIsTemplatePickerOpen(false);
+    createMutation.mutate({ title: "Untitled Form" });
+  }
+
+  function handleSelectTemplate(template: FormTemplate) {
+    setIsTemplatePickerOpen(false);
+    const schema = instantiateTemplate(template);
+    createMutation.mutate({ title: template.title, schema });
+  }
 
   const duplicateMutation = useMutation({
     mutationFn: (id: string) => duplicateForm(id),
@@ -773,7 +788,7 @@ function DashboardView() {
 
         <button
           type="button"
-          onClick={() => createMutation.mutate()}
+          onClick={() => setIsTemplatePickerOpen(true)}
           disabled={createMutation.isPending}
           className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-50 transition-all cursor-pointer"
         >
@@ -856,7 +871,7 @@ function DashboardView() {
           </p>
           <button
             type="button"
-            onClick={() => createMutation.mutate()}
+            onClick={() => setIsTemplatePickerOpen(true)}
             disabled={createMutation.isPending}
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all cursor-pointer"
           >
@@ -1016,6 +1031,13 @@ function DashboardView() {
           onPublish={() => statusMutation.mutate({ id: shareTarget.id, status: "open" })}
         />
       )}
+      <TemplatePickerModal
+        isOpen={isTemplatePickerOpen}
+        onClose={() => setIsTemplatePickerOpen(false)}
+        onSelectBlank={handleSelectBlank}
+        onSelectTemplate={handleSelectTemplate}
+        isCreating={createMutation.isPending}
+      />
     </main>
   );
 }
