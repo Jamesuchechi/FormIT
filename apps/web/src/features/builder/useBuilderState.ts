@@ -10,6 +10,7 @@ import {
 } from "@formit/schema";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { updateForm, type FormRecord, type FormSettings } from "../../lib/api.ts";
+import { instantiateQuestion, type FieldTemplate } from "../questionBank/questionBankApi.ts";
 import type { BuilderActions, BuilderState, BuilderTab } from "./types.ts";
 
 function getFormSnapshot(schema: FormSchema, form: FormRecord): string {
@@ -196,6 +197,32 @@ export function useBuilderState(initialForm: FormRecord): {
     (sectionId: string, type: FieldType, afterFieldId?: string) => {
       const fieldId = newId("f");
       const newField = FIELD_REGISTRY[type].create(fieldId);
+
+      const nextSections = schema.sections.map((sec) => {
+        if (sec.id !== sectionId) return sec;
+        const fields = [...sec.fields];
+        if (afterFieldId) {
+          const idx = fields.findIndex((f) => f.id === afterFieldId);
+          if (idx !== -1) {
+            fields.splice(idx + 1, 0, newField);
+            return { ...sec, fields };
+          }
+        }
+        fields.push(newField);
+        return { ...sec, fields };
+      });
+
+      commitSchema({ ...schema, sections: nextSections });
+      setSelectedFieldId(fieldId);
+      setSelectedSectionId(sectionId);
+    },
+    [schema, commitSchema],
+  );
+
+  const insertQuestion = useCallback(
+    (sectionId: string, template: FieldTemplate, afterFieldId?: string) => {
+      const newField = instantiateQuestion(template);
+      const fieldId = newField.id;
 
       const nextSections = schema.sections.map((sec) => {
         if (sec.id !== sectionId) return sec;
@@ -438,6 +465,7 @@ export function useBuilderState(initialForm: FormRecord): {
       deleteSection,
       reorderSections,
       addField,
+      insertQuestion,
       updateField,
       deleteField,
       duplicateField,

@@ -1,30 +1,38 @@
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { FillApi, PublicForm, SubmitExtras } from "../../lib/api.ts";
 import { FieldRenderer } from "./FieldRenderer.tsx";
 import { Turnstile } from "./Turnstile.tsx";
 import { useFillState } from "./useFillState.ts";
 
-type Props = { form: PublicForm; api: FillApi; userId?: string };
+type Props = {
+  form: PublicForm;
+  api: FillApi;
+  userId?: string;
+  initialAnswers?: Record<string, unknown>;
+  editKey?: string | null;
+};
 
-export function FormFiller({ form, api, userId }: Props) {
+export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props) {
   // Spam protection: a honeypot field humans never see, and an optional Turnstile token.
   const honeypotRef = useRef<HTMLInputElement>(null);
   const tokenRef = useRef<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   const guardedApi = useMemo<FillApi>(
     () => ({
       ...api,
-      submit: (slug, answers) => {
-        const extras: SubmitExtras = {};
-        if (honeypotRef.current?.value) extras.website = honeypotRef.current.value;
-        if (tokenRef.current) extras.turnstileToken = tokenRef.current;
-        return Object.keys(extras).length > 0
-          ? api.submit(slug, answers, extras)
+      submit: (slug, answers, extras) => {
+        const combinedExtras: SubmitExtras = { ...extras };
+        if (honeypotRef.current?.value) combinedExtras.website = honeypotRef.current.value;
+        if (tokenRef.current) combinedExtras.turnstileToken = tokenRef.current;
+        return Object.keys(combinedExtras).length > 0
+          ? api.submit(slug, answers, combinedExtras)
           : api.submit(slug, answers);
       },
     }),
     [api],
   );
-  const s = useFillState(form, guardedApi, userId);
+  const s = useFillState(form, guardedApi, userId, initialAnswers, editKey);
   const headerRef = useRef<HTMLElement>(null);
 
   const theme = form.schema.theme;
@@ -47,13 +55,80 @@ export function FormFiller({ form, api, userId }: Props) {
   }, [s.step]);
 
   if (s.status === "done") {
+    const editUrl = s.editKey
+      ? `${window.location.origin}/f/${form.slug}?edit=${s.editKey}`
+      : null;
+
     return (
       <div
         role="status"
         className={`rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 text-center shadow-sm text-neutral-900 dark:text-neutral-100 ${fontClass}`}
       >
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mb-4">
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </div>
         <h1 className="text-2xl font-semibold">{form.title}</h1>
         <p className="mt-4 text-neutral-700 dark:text-neutral-300">{s.confirmation}</p>
+
+        {form.allowResponseEditing && s.editKey && editUrl && (
+          <div className="mt-8 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 p-5 text-left">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 text-neutral-500 dark:text-neutral-400">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  Response editing enabled
+                </h2>
+                <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                  You can edit your response later using this private link. Keep it safe to prevent others from altering your submission.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(editUrl).then(() => {
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2000);
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
+                  >
+                    {copiedLink ? "✓ Copied to clipboard" : "Copy private edit link"}
+                  </button>
+                  <a
+                    href={`/f/${form.slug}?edit=${s.editKey}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 dark:bg-neutral-100 px-3 py-1.5 text-xs font-medium text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-white/90 transition-colors"
+                  >
+                    Edit your response
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -188,7 +263,15 @@ export function FormFiller({ form, api, userId }: Props) {
           className="rounded-lg px-5 py-2.5 font-medium text-white shadow-xs hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 transition-all cursor-pointer"
           disabled={submitting}
         >
-          {s.isLast ? (submitting ? "Submitting…" : "Submit") : "Next"}
+          {s.isLast
+            ? submitting
+              ? editKey
+                ? "Updating…"
+                : "Submitting…"
+              : editKey
+                ? "Update response"
+                : "Submit"
+            : "Next"}
         </button>
       </div>
     </form>

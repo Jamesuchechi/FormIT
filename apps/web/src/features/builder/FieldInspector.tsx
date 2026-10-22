@@ -1,6 +1,7 @@
 import { allFields, type Field, type Rule, type RuleOp } from "@formit/schema";
-import { AlertCircle, Sliders, Trash2, X, Zap } from "lucide-react";
+import { AlertCircle, BookmarkPlus, Sliders, Trash2, X, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
+import { SaveQuestionModal } from "../questionBank/SaveQuestionModal.tsx";
 import type { BuilderActions, BuilderState } from "./types.ts";
 
 interface FieldInspectorProps {
@@ -11,6 +12,7 @@ interface FieldInspectorProps {
 export function FieldInspector({ state, actions }: FieldInspectorProps) {
   const { schema, selectedFieldId } = state;
   const [tab, setTab] = useState<"general" | "logic">("general");
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   // Find currently selected field and its section
   const { field, sectionId } = useMemo(() => {
@@ -387,6 +389,17 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                 </div>
               </div>
             )}
+
+            <div className="pt-4 border-t border-neutral-200">
+              <button
+                type="button"
+                onClick={() => setIsSaveModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-pointer"
+              >
+                <BookmarkPlus className="h-4 w-4 text-indigo-500" />
+                Save to Question Bank
+              </button>
+            </div>
           </>
         ) : (
           /* Conditional Logic Tab */
@@ -496,6 +509,12 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
           </div>
         )}
       </div>
+
+      <SaveQuestionModal
+        isOpen={isSaveModalOpen}
+        field={field}
+        onClose={() => setIsSaveModalOpen(false)}
+      />
     </aside>
   );
 }

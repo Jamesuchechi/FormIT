@@ -201,6 +201,30 @@ export function FormSettingsTab({ state, actions }: FormSettingsTabProps) {
                 className="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
               />
             </div>
+
+            {/* Allow Response Editing */}
+            <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+              <div>
+                <label
+                  htmlFor="setting-allowediting"
+                  className="font-medium text-neutral-900 block cursor-pointer"
+                >
+                  Allow response editing via private link
+                </label>
+                <p className="text-neutral-500">
+                  Respondents receive a secure private edit link to update their submission after completing the form.
+                </p>
+              </div>
+              <input
+                id="setting-allowediting"
+                type="checkbox"
+                checked={form.settings.allowResponseEditing ?? false}
+                onChange={(e) =>
+                  actions.updateSettings({ allowResponseEditing: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              />
+            </div>
           </div>
         </div>
 

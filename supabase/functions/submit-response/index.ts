@@ -37,9 +37,43 @@ Deno.serve(
 
     const answers = await verifyUploads(form, result.data);
 
+    // Check if this is an edit of an existing response via editKey
+    const editKey = typeof body.editKey === "string" && body.editKey.trim() ? body.editKey.trim() : null;
+
+    if (editKey) {
+      if (!form.settings.allowResponseEditing) {
+        throw new HttpError(403, "editing_disabled");
+      }
+
+      const { data: updateRes, error: updateErr } = await admin.rpc("update_response_by_key", {
+        p_edit_key: editKey,
+        p_schema_version: form.schemaVersion,
+        p_answers: answers,
+      });
+      if (updateErr) throw mapRpcError(updateErr);
+
+      const responseId = (updateRes as { id?: string })?.id || "updated";
+
+      // Dispatch owner notification on edit if configured
+      dispatchNotifications(form, answers, userId, responseId, editKey).catch((err) => {
+        console.error("Failed to dispatch notifications on edit:", err);
+      });
+
+      return json(
+        {
+          ok: true,
+          id: responseId,
+          confirmation_message: form.settings.confirmationMessage || "Your response has been updated.",
+          edit_key: editKey,
+          is_edit: true,
+        },
+        200,
+      );
+    }
+
     // Status, schedule, response cap, schema version and dedupe are enforced atomically
     // inside the submit_response() SQL function (row-locked on the form).
-    const { data: id, error } = await admin.rpc("submit_response", {
+    const { data: rpcResult, error } = await admin.rpc("submit_response", {
       p_form_id: form.id,
       p_schema_version: form.schemaVersion,
       p_answers: answers,
@@ -48,12 +82,24 @@ Deno.serve(
     });
     if (error) throw mapRpcError(error);
 
+    const resObj = (rpcResult ?? {}) as { id?: string; edit_key?: string };
+    const id = resObj.id || (typeof rpcResult === "string" ? rpcResult : crypto.randomUUID());
+    const responseEditKey = form.settings.allowResponseEditing ? resObj.edit_key : undefined;
+
     // Asynchronously dispatch notifications (owner alert & respondent receipt) without blocking the response
-    dispatchNotifications(form, answers, userId, id).catch((err) => {
+    dispatchNotifications(form, answers, userId, id, responseEditKey).catch((err) => {
       console.error("Failed to dispatch notifications:", err);
     });
 
-    return json({ ok: true, id, confirmation_message: form.settings.confirmationMessage }, 201);
+    return json(
+      {
+        ok: true,
+        id,
+        confirmation_message: form.settings.confirmationMessage,
+        edit_key: responseEditKey,
+      },
+      201,
+    );
   }),
 );
 
@@ -161,6 +207,7 @@ async function dispatchNotifications(
   answers: Record<string, unknown>,
   userId: string | null,
   responseId: string,
+  editKey?: string | null,
 ): Promise<void> {
   const fields = allFields(form.schema);
   const fieldMap = new Map(fields.map((f) => [f.id, f]));
@@ -232,10 +279,17 @@ async function dispatchNotifications(
     if (respondentEmail) {
       const confirmationMsg =
         form.settings.confirmationMessage || "Thank you for completing this form!";
+
+      const appBaseUrl = Deno.env.get("APP_BASE_URL") || "https://formit.app";
+      const editSection =
+        form.settings.allowResponseEditing && editKey
+          ? `\n\nNeed to make changes? You can edit your response here:\n${appBaseUrl}/f/${form.slug}?edit=${editKey}\n`
+          : "";
+
       await sendEmail({
         to: respondentEmail,
         subject: `Receipt: Your response to "${form.title}"`,
-        text: `${confirmationMsg}\n\nHere is a summary of the details you submitted:\n\n${answerEntries}\n\nForm: ${form.title}\nSubmission ID: ${responseId}`,
+        text: `${confirmationMsg}\n\nHere is a summary of the details you submitted:\n\n${answerEntries}${editSection}\n\nForm: ${form.title}\nSubmission ID: ${responseId}`,
       });
     }
   }

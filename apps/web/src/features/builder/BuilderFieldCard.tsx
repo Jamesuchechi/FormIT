@@ -1,7 +1,19 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { FIELD_TYPES, newId, type Field, type FieldOption, type FieldType } from "@formit/schema";
-import { Calendar, Copy, GripVertical, Plus, Trash2, UploadCloud, X, Zap } from "lucide-react";
+import {
+  BookmarkPlus,
+  Calendar,
+  Copy,
+  GripVertical,
+  Plus,
+  Trash2,
+  UploadCloud,
+  X,
+  Zap,
+} from "lucide-react";
+import { useState } from "react";
+import { SaveQuestionModal } from "../questionBank/SaveQuestionModal.tsx";
 import type { BuilderActions } from "./types.ts";
 
 interface BuilderFieldCardProps {
@@ -29,6 +41,8 @@ export function BuilderFieldCard({
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   function handleAddOption() {
     if (
@@ -156,6 +170,19 @@ export function BuilderFieldCard({
               </option>
             ))}
           </select>
+
+          {/* Save to Question Bank Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsSaveModalOpen(true);
+            }}
+            title="Save to Question Bank"
+            className="rounded-lg p-1.5 text-neutral-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+          >
+            <BookmarkPlus className="h-3.5 w-3.5" />
+          </button>
 
           {/* Duplicate Button */}
           <button
@@ -374,6 +401,12 @@ export function BuilderFieldCard({
           </div>
         )}
       </div>
+
+      <SaveQuestionModal
+        isOpen={isSaveModalOpen}
+        field={field}
+        onClose={() => setIsSaveModalOpen(false)}
+      />
     </div>
   );
 }

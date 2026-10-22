@@ -19,6 +19,7 @@ export type OpenForm = {
     notificationEmail: string | null;
     sendRespondentReceipt: boolean;
     receiptEmailFieldId: string | null;
+    allowResponseEditing: boolean;
   };
 };
 
@@ -62,6 +63,7 @@ export async function loadOpenForm(slug: string): Promise<OpenForm> {
       notificationEmail: typeof s.notificationEmail === "string" && s.notificationEmail.trim() ? s.notificationEmail.trim() : null,
       sendRespondentReceipt: s.sendRespondentReceipt === true,
       receiptEmailFieldId: typeof s.receiptEmailFieldId === "string" ? s.receiptEmailFieldId : null,
+      allowResponseEditing: s.allowResponseEditing === true,
     },
   };
 }

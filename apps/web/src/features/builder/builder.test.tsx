@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { FormSchema } from "@formit/schema";
 import { act, render, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -11,6 +12,11 @@ import { FieldPalette } from "./FieldPalette.tsx";
 import { FormSettingsTab } from "./FormSettingsTab.tsx";
 import { FormThemeTab } from "./FormThemeTab.tsx";
 import { useBuilderState } from "./useBuilderState.ts";
+
+function renderWithQuery(ui: React.ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 const mockSchema: FormSchema = {
   title: "Product Feedback",
@@ -113,6 +119,21 @@ describe("Builder - useBuilderState", () => {
       result.current.actions.deleteField("s_main", "f_name");
     });
     expect(result.current.state.schema.sections[0]?.fields).toHaveLength(4);
+
+    // Insert question from question bank
+    act(() => {
+      result.current.actions.insertQuestion("s_main", {
+        type: "linear_scale",
+        label: "NPS Rating",
+        required: false,
+        min: 0,
+        max: 10,
+      });
+    });
+    expect(result.current.state.schema.sections[0]?.fields).toHaveLength(5);
+    const bankInserted = result.current.state.schema.sections[0]?.fields[4];
+    expect(bankInserted?.label).toBe("NPS Rating");
+    expect(bankInserted?.id).toMatch(/^f_/);
   });
 
   it("supports undo and redo", () => {
@@ -201,7 +222,7 @@ describe("Builder - UI Components", () => {
     const user = userEvent.setup();
     const { result } = renderHook(() => useBuilderState(mockFormRecord));
 
-    render(<FieldPalette state={result.current.state} actions={result.current.actions} />);
+    renderWithQuery(<FieldPalette state={result.current.state} actions={result.current.actions} />);
 
     expect(screen.getByText("Add Questions")).toBeInTheDocument();
     expect(screen.getByText("Short text")).toBeInTheDocument();
@@ -216,7 +237,7 @@ describe("Builder - UI Components", () => {
   it("renders BuilderCanvas with question cards and controls", () => {
     const { result } = renderHook(() => useBuilderState(mockFormRecord));
 
-    render(<BuilderCanvas state={result.current.state} actions={result.current.actions} />);
+    renderWithQuery(<BuilderCanvas state={result.current.state} actions={result.current.actions} />);
 
     expect(screen.getByDisplayValue("General Information")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Your Full Name")).toBeInTheDocument();
@@ -231,7 +252,7 @@ describe("Builder - UI Components", () => {
       result.current.actions.selectField("f_comment", "s_main");
     });
 
-    render(<FieldInspector state={result.current.state} actions={result.current.actions} />);
+    renderWithQuery(<FieldInspector state={result.current.state} actions={result.current.actions} />);
 
     expect(screen.getByText("Properties")).toBeInTheDocument();
     expect(screen.getByText("f_comment")).toBeInTheDocument();

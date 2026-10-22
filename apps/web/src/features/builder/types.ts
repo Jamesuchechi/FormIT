@@ -1,5 +1,6 @@
 import type { Field, FieldType, FormSchema, FormTheme, Rule, Section } from "@formit/schema";
 import type { FormRecord, FormSettings } from "../../lib/api.ts";
+import type { FieldTemplate } from "../questionBank/questionBankApi.ts";
 
 export type BuilderTab = "builder" | "theme" | "preview" | "settings";
 
@@ -34,6 +35,7 @@ export interface BuilderActions {
 
   // Field actions
   addField: (sectionId: string, type: FieldType, afterFieldId?: string) => void;
+  insertQuestion: (sectionId: string, template: FieldTemplate, afterFieldId?: string) => void;
   updateField: (sectionId: string, fieldId: string, updates: Partial<Field>) => void;
   deleteField: (sectionId: string, fieldId: string) => void;
   duplicateField: (sectionId: string, fieldId: string) => void;

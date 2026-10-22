@@ -22,22 +22,30 @@ function focusField(id: string) {
   });
 }
 
-export function useFillState(form: PublicForm, api: FillApi, userId?: string) {
+export function useFillState(
+  form: PublicForm,
+  api: FillApi,
+  userId?: string,
+  initialAnswers?: Record<string, unknown>,
+  editKey?: string | null,
+) {
   const { schema, slug, schemaVersion, id: formId } = form;
 
   const knownIds = useMemo(() => new Set(allFields(schema).map((f) => f.id)), [schema]);
 
-  // Restore a draft, dropping ids that no longer exist (a form can be edited in place
-  // before its first response, without a version bump).
+  // Restore a draft or pre-populated answers (e.g. from response editing via private link)
   const [answers, setAnswers] = useState<Record<string, unknown>>(() => {
+    if (initialAnswers && Object.keys(initialAnswers).length > 0) {
+      return Object.fromEntries(Object.entries(initialAnswers).filter(([id]) => knownIds.has(id)));
+    }
     const draft = loadDraft(slug, schemaVersion);
     if (!draft) return {};
     return Object.fromEntries(Object.entries(draft).filter(([id]) => knownIds.has(id)));
   });
 
-  // Sync remote draft if respondent is authenticated
+  // Sync remote draft if respondent is authenticated (only when not editing an existing response)
   useEffect(() => {
-    if (!userId || !formId) return;
+    if (!userId || !formId || editKey) return;
     let active = true;
     void loadRemoteDraft(formId, schemaVersion).then((remote) => {
       if (!active || !remote) return;
@@ -51,13 +59,14 @@ export function useFillState(form: PublicForm, api: FillApi, userId?: string) {
     return () => {
       active = false;
     };
-  }, [userId, formId, schemaVersion, knownIds]);
+  }, [userId, formId, schemaVersion, knownIds, editKey]);
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [stepRaw, setStep] = useState(0);
   const [status, setStatus] = useState<"editing" | "submitting" | "done">("editing");
   const [formError, setFormError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
+  const [savedEditKey, setSavedEditKey] = useState<string | null>(editKey ?? null);
 
   const visibility = useMemo(() => computeVisibility(schema, answers), [schema, answers]);
 
@@ -149,8 +158,12 @@ export function useFillState(form: PublicForm, api: FillApi, userId?: string) {
     setStatus("submitting");
     setFormError(null);
     try {
-      const res = await api.submit(slug, result.data);
+      const extras = editKey ? { editKey } : undefined;
+      const res = await api.submit(slug, result.data, extras);
       clearDraft(slug, schemaVersion, { formId, userId });
+      if (res.edit_key) {
+        setSavedEditKey(res.edit_key);
+      }
       setConfirmation(res.confirmation_message ?? form.confirmationMessage ?? DEFAULT_CONFIRMATION);
       setStatus("done");
     } catch (e) {
@@ -161,7 +174,7 @@ export function useFillState(form: PublicForm, api: FillApi, userId?: string) {
         setFormError(describeApiError(e));
       }
     }
-  }, [status, schema, answers, api, slug, schemaVersion, form.confirmationMessage, showErrors]);
+  }, [status, schema, answers, api, slug, schemaVersion, form.confirmationMessage, showErrors, formId, userId, editKey]);
 
   const upload = useCallback(
     (fieldId: string, file: File) => api.upload(slug, fieldId, file),
@@ -177,6 +190,7 @@ export function useFillState(form: PublicForm, api: FillApi, userId?: string) {
     status,
     formError,
     confirmation,
+    editKey: savedEditKey,
     setValue,
     next,
     back,

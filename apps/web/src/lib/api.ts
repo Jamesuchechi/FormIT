@@ -33,6 +33,7 @@ export type PublicForm = {
   schemaVersion: number;
   requireSignIn: boolean;
   confirmationMessage: string | null;
+  allowResponseEditing?: boolean;
 };
 
 /** Load an open form for the fill page. Null when it doesn't exist, is closed, or is out of schedule. */
@@ -52,6 +53,47 @@ export async function getPublicForm(slug: string): Promise<PublicForm | null> {
     schemaVersion: data.schema_version,
     requireSignIn: data.require_sign_in,
     confirmationMessage: data.confirmation_message,
+    allowResponseEditing: Boolean(data.allow_response_editing),
+  };
+}
+
+/** Response loaded by edit key for respondent to edit their submission */
+export type ResponseForEdit = {
+  responseId: string;
+  schemaVersion: number;
+  answers: Record<string, unknown>;
+  submittedAt: string;
+  form: PublicForm;
+};
+
+/** Load a response by private edit_key */
+export async function getResponseForEdit(editKey: string): Promise<ResponseForEdit | null> {
+  const { data, error } = await supabase.rpc("get_response_for_edit", { p_edit_key: editKey });
+  if (error) {
+    if (error.message === "editing_disabled") throw new ApiError("editing_disabled", 403);
+    if (error.message === "form_closed") throw new ApiError("form_closed", 403);
+    throw error;
+  }
+  if (!data) return null;
+
+  const formParsed = parseFormSchema(data.form.schema);
+  if (!formParsed.success) throw new ApiError("form_invalid", 500);
+
+  return {
+    responseId: data.response_id,
+    schemaVersion: data.schema_version,
+    answers: data.answers || {},
+    submittedAt: data.submitted_at,
+    form: {
+      id: data.form.id,
+      slug: data.form.slug,
+      title: data.form.title,
+      schema: formParsed.data,
+      schemaVersion: data.form.schema_version,
+      requireSignIn: data.form.require_sign_in,
+      confirmationMessage: data.form.confirmation_message,
+      allowResponseEditing: true,
+    },
   };
 }
 
@@ -66,15 +108,23 @@ export async function isSlugAvailable(slug: string, currentFormId?: string): Pro
   return data === null;
 }
 
-/** Optional anti-spam fields sent alongside a submission. */
-export type SubmitExtras = { website?: string; turnstileToken?: string };
+/** Optional anti-spam fields and editKey sent alongside a submission. */
+export type SubmitExtras = { website?: string; turnstileToken?: string; editKey?: string };
+
+export type SubmitResponseResult = {
+  ok: true;
+  id: string;
+  confirmation_message: string | null;
+  edit_key?: string;
+  is_edit?: boolean;
+};
 
 export function submitResponse(
   slug: string,
   answers: Record<string, unknown>,
   extras?: SubmitExtras,
 ) {
-  return call<{ ok: true; id: string; confirmation_message: string | null }>("submit-response", {
+  return call<SubmitResponseResult>("submit-response", {
     slug,
     answers,
     ...extras,
@@ -114,7 +164,7 @@ export type FillApi = {
     slug: string,
     answers: Record<string, unknown>,
     extras?: SubmitExtras,
-  ) => Promise<{ ok: true; id: string; confirmation_message: string | null }>;
+  ) => Promise<SubmitResponseResult>;
   upload: (slug: string, fieldId: string, file: File) => Promise<FileAnswer>;
 };
 
@@ -133,6 +183,7 @@ export type FormSettings = {
   notificationEmail?: string;
   sendRespondentReceipt?: boolean;
   receiptEmailFieldId?: string;
+  allowResponseEditing?: boolean;
 };
 
 export type FormRecord = {

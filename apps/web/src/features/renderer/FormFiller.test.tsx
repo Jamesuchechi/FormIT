@@ -55,14 +55,26 @@ const makeForm = (over: Partial<PublicForm> = {}): PublicForm => ({
   ...over,
 });
 
-function setup(over: Partial<PublicForm> = {}, api?: Partial<FillApi>) {
+function setup(
+  over: Partial<PublicForm> = {},
+  api?: Partial<FillApi>,
+  initialAnswers?: Record<string, unknown>,
+  editKey?: string | null,
+) {
   const fullApi = {
     submit: vi.fn().mockResolvedValue({ ok: true, id: "r1", confirmation_message: "Thanks!" }),
     upload: vi.fn(),
     ...api,
   } as unknown as FillApi & { submit: ReturnType<typeof vi.fn>; upload: ReturnType<typeof vi.fn> };
   const user = userEvent.setup();
-  render(<FormFiller form={makeForm(over)} api={fullApi} />);
+  render(
+    <FormFiller
+      form={makeForm(over)}
+      api={fullApi}
+      initialAnswers={initialAnswers}
+      editKey={editKey}
+    />,
+  );
   return { api: fullApi, user };
 }
 
@@ -252,6 +264,64 @@ describe("FormFiller", () => {
     await user.click(screen.getByRole("button", { name: "Next" }));
     await user.click(screen.getByRole("button", { name: "Submit" }));
     expect(await screen.findByText("See you soon")).toBeInTheDocument();
+  });
+
+  it("displays private edit link when allowResponseEditing is enabled and edit_key is returned", async () => {
+    const { user } = setup(
+      { allowResponseEditing: true },
+      {
+        submit: vi.fn().mockResolvedValue({
+          ok: true,
+          id: "r1",
+          confirmation_message: "Thanks!",
+          edit_key: "abc-123-edit-key",
+        }),
+      },
+    );
+
+    await user.type(screen.getByLabelText(/^Name/), "Alice");
+    await user.selectOptions(screen.getByLabelText(/^Role/), "dev");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(await screen.findByText("Response editing enabled")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy private edit link" })).toBeInTheDocument();
+    const editLink = screen.getByRole("link", { name: "Edit your response" });
+    expect(editLink).toHaveAttribute("href", "/f/my-form?edit=abc-123-edit-key");
+  });
+
+  it("pre-populates initial answers and sends editKey on update", async () => {
+    const submitMock = vi.fn().mockResolvedValue({
+      ok: true,
+      id: "r1",
+      confirmation_message: "Updated successfully!",
+      is_edit: true,
+    });
+    const { api, user } = setup(
+      { allowResponseEditing: true },
+      { submit: submitMock },
+      { name: "Existing Name", role: "dev" },
+      "my-secret-edit-key",
+    );
+
+    expect(screen.getByLabelText(/^Name/)).toHaveValue("Existing Name");
+    expect(screen.getByLabelText(/^Role/)).toHaveValue("dev");
+
+    await user.clear(screen.getByLabelText(/^Name/));
+    await user.type(screen.getByLabelText(/^Name/), "Updated Name");
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    const updateBtn = screen.getByRole("button", { name: "Update response" });
+    await user.click(updateBtn);
+
+    await waitFor(() => {
+      expect(api.submit).toHaveBeenCalledWith(
+        "my-form",
+        { name: "Updated Name", role: "dev" },
+        { editKey: "my-secret-edit-key" },
+      );
+    });
+    expect(await screen.findByText("Updated successfully!")).toBeInTheDocument();
   });
 });
 

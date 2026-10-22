@@ -95,8 +95,8 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 - [x] Themes: accent color, font, header image, dark mode on fill page
 - [x] Email notification to owner on new response
 - [x] Email receipt to respondent (optional per form)
-- [ ] Response editing by respondent via a private edit link
-- [ ] Question bank: save and reuse field definitions
+- [x] Response editing by respondent via a private edit link
+- [x] Question bank: save and reuse field definitions
 - [ ] Import from CSV / paste a list of options
 - [ ] "Other" option on choice fields
 - [ ] Choice shuffling and randomized option order
