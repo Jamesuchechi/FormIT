@@ -186,4 +186,35 @@ describe("validateSubmission", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("validates forms with shuffleOptions, imageUrl, and imageAlt", () => {
+    const richForm: FormSchema = {
+      ...form,
+      sections: [
+        {
+          id: "s_rich",
+          fields: [
+            {
+              id: "f_shuffled",
+              type: "multiple_choice",
+              label: "Pick a fruit",
+              helpText: "Look at the diagram",
+              imageUrl: "https://example.com/fruit-diagram.png",
+              imageAlt: "A diagram of fresh fruits",
+              required: true,
+              shuffleOptions: true,
+              options: [
+                { id: "apple", label: "Apple" },
+                { id: "banana", label: "Banana" },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const valid = validateSubmission(richForm, { f_shuffled: "banana" });
+    expect(valid).toEqual({ success: true, data: { f_shuffled: "banana" } });
+  });
 });
+

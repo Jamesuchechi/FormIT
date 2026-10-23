@@ -358,5 +358,45 @@ describe("Builder - UI Components", () => {
     const receiptToggle = screen.getByLabelText(/send email receipt to respondent/i);
     expect(receiptToggle).toBeChecked();
   });
+
+  it("configures question image and option shuffling in FieldInspector", async () => {
+    const user = userEvent.setup();
+    const { result } = renderHook(() => useBuilderState(mockFormRecord));
+
+    // Select the multiple choice question 'f_rating'
+    act(() => {
+      result.current.actions.selectField("f_rating", "s_main");
+    });
+
+    expect(result.current.state.selectedFieldId).toBe("f_rating");
+
+    // Render FieldInspector
+    renderWithQuery(<FieldInspector state={result.current.state} actions={result.current.actions} />);
+
+    // Verify Question Image section exists
+    expect(screen.getByText("Question Image")).toBeInTheDocument();
+    const urlInput = screen.getByPlaceholderText(/Paste image URL/i);
+    await user.type(urlInput, "https://example.com/rating-scale.png");
+
+    const applyBtn = screen.getByRole("button", { name: "Apply" });
+    await user.click(applyBtn);
+
+    // Verify field updated in builder state
+    const currentRatingField = result.current.state.schema.sections[0]?.fields.find(
+      (f) => f.id === "f_rating",
+    );
+    expect(currentRatingField?.imageUrl).toBe("https://example.com/rating-scale.png");
+
+    // Verify Shuffle choices toggle exists and functions
+    const shuffleToggle = screen.getByLabelText(/shuffle choices/i);
+    expect(shuffleToggle).not.toBeChecked();
+
+    await user.click(shuffleToggle);
+    const updatedRatingField = result.current.state.schema.sections[0]?.fields.find(
+      (f) => f.id === "f_rating",
+    );
+    expect(updatedRatingField && "shuffleOptions" in updatedRatingField && updatedRatingField.shuffleOptions).toBe(true);
+  });
 });
+
 

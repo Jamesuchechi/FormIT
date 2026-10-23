@@ -1,6 +1,17 @@
 import { allFields, type Field, type Rule, type RuleOp } from "@formit/schema";
-import { AlertCircle, BookmarkPlus, FileSpreadsheet, Sliders, Trash2, X, Zap } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  AlertCircle,
+  BookmarkPlus,
+  FileSpreadsheet,
+  Image as ImageIcon,
+  Shuffle,
+  Sliders,
+  Trash2,
+  Upload,
+  X,
+  Zap,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { SaveQuestionModal } from "../questionBank/SaveQuestionModal.tsx";
 import { ImportOptionsModal } from "./ImportOptionsModal.tsx";
 import type { BuilderActions, BuilderState } from "./types.ts";
@@ -15,6 +26,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
   const [tab, setTab] = useState<"general" | "logic">("general");
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [imageInput, setImageInput] = useState("");
 
   // Find currently selected field and its section
   const { field, sectionId } = useMemo(() => {
@@ -36,6 +48,26 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
     }
     return candidates;
   }, [schema, selectedFieldId]);
+
+  useEffect(() => {
+    setImageInput(field?.imageUrl || "");
+  }, [field?.id, field?.imageUrl]);
+
+  function handleImageFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !sectionId || !field) return;
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        actions.updateField(sectionId, field.id, {
+          imageUrl: dataUrl,
+        } as unknown as Partial<Field>);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
 
   if (!field || !sectionId) {
     return (
@@ -167,6 +199,112 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                 }
                 className="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
               />
+            </div>
+
+            {/* Question Description Image Section */}
+            <div className="space-y-3 rounded-lg border border-neutral-200 p-3 bg-neutral-50/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <ImageIcon className="h-4 w-4 text-indigo-600" />
+                  <label className="text-xs font-semibold text-neutral-900 block">
+                    Question Image
+                  </label>
+                </div>
+                {field.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageInput("");
+                      actions.updateField(sectionId, field.id, {
+                        imageUrl: undefined,
+                        imageAlt: undefined,
+                      } as unknown as Partial<Field>);
+                    }}
+                    className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] text-neutral-500">
+                Attach an illustrative diagram, photo, or screenshot to this question.
+              </p>
+
+              {field.imageUrl ? (
+                <div className="space-y-2 pt-1">
+                  <div className="relative rounded-lg border border-neutral-200 overflow-hidden bg-white max-h-40 flex items-center justify-center p-1">
+                    <img
+                      src={field.imageUrl}
+                      alt={field.imageAlt || "Question image"}
+                      className="max-h-36 w-full object-contain rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-neutral-600 block mb-1">
+                      Alt text / Description
+                    </label>
+                    <input
+                      type="text"
+                      value={field.imageAlt ?? ""}
+                      onChange={(e) =>
+                        actions.updateField(sectionId, field.id, {
+                          imageAlt: e.target.value || undefined,
+                        } as unknown as Partial<Field>)
+                      }
+                      placeholder="e.g. Diagram of customer journey"
+                      className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="url"
+                      value={imageInput}
+                      onChange={(e) => setImageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (imageInput.trim()) {
+                            actions.updateField(sectionId, field.id, {
+                              imageUrl: imageInput.trim(),
+                            } as unknown as Partial<Field>);
+                          }
+                        }
+                      }}
+                      placeholder="Paste image URL (https://...)"
+                      className="flex-1 rounded border border-neutral-300 px-2 py-1 text-xs outline-none focus:border-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (imageInput.trim()) {
+                          actions.updateField(sectionId, field.id, {
+                            imageUrl: imageInput.trim(),
+                          } as unknown as Partial<Field>);
+                        }
+                      }}
+                      disabled={!imageInput.trim()}
+                      className="rounded bg-neutral-800 px-2.5 py-1 text-xs font-semibold text-white hover:bg-neutral-700 disabled:opacity-40 transition-colors cursor-pointer"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <label className="w-full flex items-center justify-center gap-1.5 rounded border border-dashed border-neutral-300 bg-white p-1.5 text-xs font-medium text-neutral-600 hover:border-indigo-400 hover:text-indigo-600 cursor-pointer transition-colors">
+                      <Upload className="h-3.5 w-3.5 text-indigo-500" />
+                      <span>Upload local image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileUpload}
+                        className="sr-only"
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Type-Specific Validations */}
@@ -308,6 +446,32 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                     onChange={(e) =>
                       actions.updateField(sectionId, field.id, {
                         allowOther: e.target.checked,
+                      } as unknown as Partial<Field>)
+                    }
+                    className="rounded border-neutral-300 accent-indigo-600 size-4 cursor-pointer"
+                  />
+                </div>
+
+                {/* Shuffle Options Toggle */}
+                <div className="flex items-center justify-between rounded-lg border border-neutral-200 p-3 bg-neutral-50/50">
+                  <div>
+                    <label
+                      htmlFor="field-shuffle-toggle"
+                      className="text-xs font-medium text-neutral-900 block cursor-pointer"
+                    >
+                      Shuffle choices
+                    </label>
+                    <span className="text-[10px] text-neutral-500">
+                      Randomize option order for respondents
+                    </span>
+                  </div>
+                  <input
+                    id="field-shuffle-toggle"
+                    type="checkbox"
+                    checked={!!field.shuffleOptions}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        shuffleOptions: e.target.checked,
                       } as unknown as Partial<Field>)
                     }
                     className="rounded border-neutral-300 accent-indigo-600 size-4 cursor-pointer"

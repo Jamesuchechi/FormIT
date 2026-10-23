@@ -1,5 +1,26 @@
+import { useMemo } from "react";
+import type { FieldOption } from "@formit/schema";
 import type { FieldInputProps } from "./types.ts";
 import { inputClass, linkButtonClass, optionClass } from "./styles.ts";
+
+function useRenderedOptions(options: FieldOption[], shuffle?: boolean) {
+  const optionsKey = options.map((o) => o.id).join(",");
+  return useMemo(() => {
+    if (!shuffle || options.length <= 1) return options;
+    const copy = [...options];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const itemI = copy[i];
+      const itemJ = copy[j];
+      if (itemI && itemJ) {
+        copy[i] = itemJ;
+        copy[j] = itemI;
+      }
+    }
+    return copy;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optionsKey, shuffle]);
+}
 
 export function MultipleChoiceInput({
   field,
@@ -9,10 +30,11 @@ export function MultipleChoiceInput({
 }: FieldInputProps<"multiple_choice">) {
   const isOther = typeof value === "object" && value !== null && "other" in value;
   const otherText = isOther ? (value as { other: string }).other : "";
+  const renderedOptions = useRenderedOptions(field.options, field.shuffleOptions);
 
   return (
     <div className="space-y-2.5">
-      {field.options.map((o) => (
+      {renderedOptions.map((o) => (
         <label key={o.id} className={optionClass}>
           <input
             type="radio"
@@ -69,6 +91,7 @@ export function CheckboxesInput({ field, value, onChange, ctl }: FieldInputProps
   const selected = Array.isArray(value) ? (value as (string | { other: string })[]) : [];
   const { maxSelected } = field.validation;
   const atMax = maxSelected !== undefined && selected.length >= maxSelected;
+  const renderedOptions = useRenderedOptions(field.options, field.shuffleOptions);
 
   const toggle = (id: string) => {
     const isChecked = selected.includes(id);
@@ -98,7 +121,7 @@ export function CheckboxesInput({ field, value, onChange, ctl }: FieldInputProps
 
   return (
     <div className="space-y-2.5">
-      {field.options.map((o) => {
+      {renderedOptions.map((o) => {
         const checked = selected.includes(o.id);
         return (
           <label key={o.id} className={optionClass}>
@@ -152,6 +175,7 @@ export function DropdownInput({ field, value, onChange, ctl }: FieldInputProps<"
   const isOther = typeof value === "object" && value !== null && "other" in value;
   const otherText = isOther ? (value as { other: string }).other : "";
   const selectValue = isOther ? "__other__" : typeof value === "string" ? value : "";
+  const renderedOptions = useRenderedOptions(field.options, field.shuffleOptions);
 
   return (
     <div className="space-y-2">
@@ -171,7 +195,7 @@ export function DropdownInput({ field, value, onChange, ctl }: FieldInputProps<"
         className={inputClass}
       >
         <option value="">Select…</option>
-        {field.options.map((o) => (
+        {renderedOptions.map((o) => (
           <option key={o.id} value={o.id}>
             {o.label}
           </option>

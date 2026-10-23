@@ -89,6 +89,8 @@ const base = {
   id: idSchema,
   label: z.string().trim().min(1).max(500),
   helpText: z.string().max(1_000).optional(),
+  imageUrl: z.string().max(500_000).optional(),
+  imageAlt: z.string().max(300).optional(),
   required: z.boolean().default(false),
   visibleIf: ruleSchema.optional(),
 };
@@ -122,6 +124,7 @@ const multipleChoice = z.object({
   type: z.literal("multiple_choice"),
   options,
   allowOther: z.boolean().default(false).optional(),
+  shuffleOptions: z.boolean().default(false).optional(),
 });
 
 const dropdown = z.object({
@@ -129,6 +132,7 @@ const dropdown = z.object({
   type: z.literal("dropdown"),
   options,
   allowOther: z.boolean().default(false).optional(),
+  shuffleOptions: z.boolean().default(false).optional(),
 });
 
 const checkboxes = z.object({
@@ -136,6 +140,7 @@ const checkboxes = z.object({
   type: z.literal("checkboxes"),
   options,
   allowOther: z.boolean().default(false).optional(),
+  shuffleOptions: z.boolean().default(false).optional(),
   validation: z
     .object({
       minSelected: z.number().int().min(0).optional(),

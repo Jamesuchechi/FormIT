@@ -10,6 +10,7 @@ import {
   Sliders,
   Undo2,
   Palette,
+  Keyboard,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,9 +21,10 @@ import type { BuilderActions, BuilderState } from "./types.ts";
 interface BuilderHeaderProps {
   state: BuilderState;
   actions: BuilderActions;
+  onOpenShortcuts?: () => void;
 }
 
-export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
+export function BuilderHeader({ state, actions, onOpenShortcuts }: BuilderHeaderProps) {
   const {
     form,
     schema,
@@ -149,6 +151,17 @@ export function BuilderHeader({ state, actions }: BuilderHeaderProps) {
             >
               <Redo2 className="h-4 w-4" />
             </button>
+            {onOpenShortcuts && (
+              <button
+                type="button"
+                onClick={onOpenShortcuts}
+                title="Keyboard Shortcuts (?)"
+                aria-label="Keyboard Shortcuts"
+                className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-colors cursor-pointer"
+              >
+                <Keyboard className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           {/* Autosave Status */}

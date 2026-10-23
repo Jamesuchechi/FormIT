@@ -417,4 +417,92 @@ describe("file upload field", () => {
       }),
     );
   });
+
+  it("renders per-field description images with proper accessibility alt text", () => {
+    const imageSchema: FormSchema = {
+      title: "Image Question Form",
+      sections: [
+        {
+          id: "s1",
+          fields: [
+            {
+              id: "q_diagram",
+              type: "short_text",
+              label: "Describe this architecture",
+              helpText: "Refer to the diagram below",
+              imageUrl: "https://images.unsplash.com/photo-diagram.png",
+              imageAlt: "System Architecture Diagram",
+              required: false,
+              validation: {},
+            },
+          ],
+        },
+      ],
+    };
+
+    setup({ schema: imageSchema });
+
+    expect(screen.getByText("Describe this architecture")).toBeInTheDocument();
+    expect(screen.getByText("Refer to the diagram below")).toBeInTheDocument();
+
+    const img = screen.getByRole("img", { name: "System Architecture Diagram" });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute("src", "https://images.unsplash.com/photo-diagram.png");
+  });
+
+  it("shuffles choices when shuffleOptions is enabled while keeping 'Other' pinned at the end", async () => {
+    // Deterministic shuffle with mock Math.random
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
+
+    try {
+      const shuffleSchema: FormSchema = {
+        title: "Quiz with Shuffled Options",
+        sections: [
+          {
+            id: "s1",
+            fields: [
+              {
+                id: "q_quiz",
+                type: "multiple_choice",
+                label: "What is the capital of France?",
+                required: true,
+                shuffleOptions: true,
+                allowOther: true,
+                options: [
+                  { id: "opt_a", label: "Berlin" },
+                  { id: "opt_b", label: "Madrid" },
+                  { id: "opt_c", label: "Paris" },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const { api, user } = setup({ schema: shuffleSchema });
+
+      // All options should be present
+      expect(screen.getByText("Berlin")).toBeInTheDocument();
+      expect(screen.getByText("Madrid")).toBeInTheDocument();
+      expect(screen.getByText("Paris")).toBeInTheDocument();
+
+      // "Other:" should still be present
+      const otherLabel = screen.getByText(/^Other:/i);
+      expect(otherLabel).toBeInTheDocument();
+
+      // Click Paris
+      await user.click(screen.getByLabelText("Paris"));
+
+      await user.click(screen.getByRole("button", { name: "Submit" }));
+
+      await waitFor(() =>
+        expect(api.submit).toHaveBeenCalledWith("my-form", {
+          q_quiz: "opt_c",
+        }),
+      );
+    } finally {
+      randomSpy.mockRestore();
+    }
+  });
 });
+

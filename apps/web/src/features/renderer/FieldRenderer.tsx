@@ -50,6 +50,16 @@ export function FieldRenderer({ field, value, errors, onChange, onUpload }: Prop
           {field.helpText}
         </p>
       )}
+      {field.imageUrl && (
+        <div className="mt-3 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 max-w-xl">
+          <img
+            src={field.imageUrl}
+            alt={field.imageAlt || field.label}
+            className="w-full max-h-80 sm:max-h-96 object-contain mx-auto"
+            loading="lazy"
+          />
+        </div>
+      )}
       <div className="mt-3">{renderInput(field, value, onChange, ctl, onUpload)}</div>
       {invalid && (
         <p id={errorId} role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium">

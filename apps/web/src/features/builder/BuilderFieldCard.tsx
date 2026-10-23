@@ -7,7 +7,9 @@ import {
   Copy,
   FileSpreadsheet,
   GripVertical,
+  Image as ImageIcon,
   Plus,
+  Shuffle,
   Trash2,
   UploadCloud,
   X,
@@ -155,6 +157,30 @@ export function BuilderFieldCard({
             placeholder="Add description or instructions (optional)"
             className="w-full text-xs text-neutral-500 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-0.5 transition-colors"
           />
+
+          {field.imageUrl && (
+            <div className="relative group/img mt-2 max-w-sm rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50">
+              <img
+                src={field.imageUrl}
+                alt={field.imageAlt || field.label}
+                className="max-h-44 w-full object-contain rounded-md"
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.updateField(sectionId, field.id, {
+                    imageUrl: undefined,
+                    imageAlt: undefined,
+                  } as unknown as Partial<Field>);
+                }}
+                title="Remove image"
+                className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Top-Right Field Controls */}
@@ -316,6 +342,23 @@ export function BuilderFieldCard({
                   Add "Other"
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() =>
+                  actions.updateField(sectionId, field.id, {
+                    shuffleOptions: !field.shuffleOptions,
+                  } as unknown as Partial<Field>)
+                }
+                title={field.shuffleOptions ? "Disable option shuffling" : "Shuffle option order for respondents"}
+                className={`flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors ${
+                  field.shuffleOptions
+                    ? "text-indigo-600 font-semibold"
+                    : "text-neutral-500 hover:text-neutral-800"
+                }`}
+              >
+                <Shuffle className="h-3 w-3" />
+                {field.shuffleOptions ? "Shuffled" : "Shuffle"}
+              </button>
             </div>
           </div>
         )}
@@ -401,6 +444,23 @@ export function BuilderFieldCard({
                   Add "Other"
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() =>
+                  actions.updateField(sectionId, field.id, {
+                    shuffleOptions: !field.shuffleOptions,
+                  } as unknown as Partial<Field>)
+                }
+                title={field.shuffleOptions ? "Disable option shuffling" : "Shuffle option order for respondents"}
+                className={`flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors ${
+                  field.shuffleOptions
+                    ? "text-indigo-600 font-semibold"
+                    : "text-neutral-500 hover:text-neutral-800"
+                }`}
+              >
+                <Shuffle className="h-3 w-3" />
+                {field.shuffleOptions ? "Shuffled" : "Shuffle"}
+              </button>
             </div>
           </div>
         )}
@@ -487,6 +547,23 @@ export function BuilderFieldCard({
                   Add "Other"
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() =>
+                  actions.updateField(sectionId, field.id, {
+                    shuffleOptions: !field.shuffleOptions,
+                  } as unknown as Partial<Field>)
+                }
+                title={field.shuffleOptions ? "Disable option shuffling" : "Shuffle option order for respondents"}
+                className={`flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors ${
+                  field.shuffleOptions
+                    ? "text-indigo-600 font-semibold"
+                    : "text-neutral-500 hover:text-neutral-800"
+                }`}
+              >
+                <Shuffle className="h-3 w-3" />
+                {field.shuffleOptions ? "Shuffled" : "Shuffle"}
+              </button>
             </div>
           </div>
         )}

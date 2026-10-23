@@ -8,6 +8,8 @@ import { FieldInspector } from "../features/builder/FieldInspector.tsx";
 import { FieldPalette } from "../features/builder/FieldPalette.tsx";
 import { FormSettingsTab } from "../features/builder/FormSettingsTab.tsx";
 import { FormThemeTab } from "../features/builder/FormThemeTab.tsx";
+import { KeyboardShortcutsModal } from "../features/builder/KeyboardShortcutsModal.tsx";
+import { useBuilderShortcuts } from "../features/builder/useBuilderShortcuts.ts";
 import { useBuilderState } from "../features/builder/useBuilderState.ts";
 import { FormFiller } from "../features/renderer/FormFiller.tsx";
 import { getOwnerForm, type FillApi, type PublicForm } from "../lib/api.ts";
@@ -79,34 +81,10 @@ interface WorkspaceProps {
 
 function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: WorkspaceProps) {
   const { state, actions } = useBuilderState(initialForm);
-
-  // Global keyboard shortcuts (Undo, Redo, Deselect)
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      // Don't intercept if user is typing in an input/textarea
-      const target = e.target as HTMLElement | null;
-      const isInput =
-        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
-
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
-        if (e.shiftKey) {
-          e.preventDefault();
-          actions.redo();
-        } else {
-          e.preventDefault();
-          actions.undo();
-        }
-      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "y") {
-        e.preventDefault();
-        actions.redo();
-      } else if (e.key === "Escape" && !isInput) {
-        actions.selectField(null);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [actions]);
+  const { isShortcutsOpen, openShortcuts, closeShortcuts } = useBuilderShortcuts({
+    state,
+    actions,
+  });
 
   // Simulated FillApi for the interactive preview tab
   const previewApi: FillApi = useMemo(
@@ -175,7 +153,8 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
   return (
     <div className="flex h-screen max-h-[100dvh] w-screen flex-col overflow-hidden bg-neutral-100">
       {/* Top Builder Navigation */}
-      <BuilderHeader state={state} actions={actions} />
+      <BuilderHeader state={state} actions={actions} onOpenShortcuts={openShortcuts} />
+      <KeyboardShortcutsModal isOpen={isShortcutsOpen} onClose={closeShortcuts} />
 
       {/* Main Area based on Active Tab */}
       <div className="flex flex-1 overflow-hidden flex-col min-h-0">
