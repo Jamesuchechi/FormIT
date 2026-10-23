@@ -46,13 +46,13 @@ export function FieldRenderer({ field, value, errors, onChange, onUpload }: Prop
   const body = (
     <>
       {field.helpText && (
-        <p id={helpId} className="mt-1 text-sm text-neutral-500">
+        <p id={helpId} className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
           {field.helpText}
         </p>
       )}
       <div className="mt-3">{renderInput(field, value, onChange, ctl, onUpload)}</div>
       {invalid && (
-        <p id={errorId} role="alert" className="mt-2 text-sm text-red-600">
+        <p id={errorId} role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium">
           {errors?.join(" ")}
         </p>
       )}
@@ -60,16 +60,16 @@ export function FieldRenderer({ field, value, errors, onChange, onUpload }: Prop
   );
 
   const card =
-    "rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-5 shadow-sm text-neutral-900 dark:text-neutral-100 data-[invalid=true]:border-red-300 dark:data-[invalid=true]:border-red-500/50";
+    "rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 p-4 sm:p-5 shadow-xs text-neutral-900 dark:text-neutral-100 data-[invalid=true]:border-red-300 dark:data-[invalid=true]:border-red-500/50 transition-colors";
 
   return GROUP_TYPES.has(field.type) ? (
     <fieldset id={`field-${field.id}`} data-invalid={invalid} className={card}>
-      <legend className="float-left w-full text-base font-medium">{title}</legend>
+      <legend className="float-left w-full text-base sm:text-lg font-medium leading-snug">{title}</legend>
       <div className="clear-both">{body}</div>
     </fieldset>
   ) : (
     <div id={`field-${field.id}`} data-invalid={invalid} className={card}>
-      <label htmlFor={ctl.id} className="block text-base font-medium">
+      <label htmlFor={ctl.id} className="block text-base sm:text-lg font-medium leading-snug">
         {title}
       </label>
       {body}

@@ -39,7 +39,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
 
   if (!field || !sectionId) {
     return (
-      <aside className="w-80 flex-shrink-0 border-l border-neutral-200 bg-white p-6 h-[calc(100vh-4rem)] sticky top-16 flex flex-col items-center justify-center text-center text-neutral-400">
+      <aside className="w-full lg:w-80 lg:flex-shrink-0 border-l border-neutral-200 bg-white p-6 h-full lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 flex flex-col items-center justify-center text-center text-neutral-400">
         <Sliders className="h-8 w-8 text-neutral-300 mb-2" />
         <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
           Question Inspector
@@ -94,7 +94,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
   const selectedTargetField = precedingFields.find((f) => f.id === currentRule?.field);
 
   return (
-    <aside className="w-80 flex-shrink-0 border-l border-neutral-200 bg-white flex flex-col h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto">
+    <aside className="w-full lg:w-80 lg:flex-shrink-0 border-l border-neutral-200 bg-white flex flex-col h-full lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-neutral-200">
         <div className="flex items-center gap-2">

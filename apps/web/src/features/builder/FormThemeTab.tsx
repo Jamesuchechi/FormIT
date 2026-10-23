@@ -108,10 +108,46 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
     [state.form.id, state.form.slug, state.form.schemaVersion, state.form.settings.confirmationMessage, state.schema],
   );
 
+  const [mobileView, setMobileView] = useState<"controls" | "preview">("controls");
+
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div className="flex flex-col lg:flex-row flex-1 h-full w-full overflow-hidden min-h-0">
+      {/* Mobile subview switcher */}
+      <div className="lg:hidden flex items-center justify-center p-2.5 border-b border-neutral-200 bg-white flex-shrink-0">
+        <div className="flex rounded-lg border border-neutral-200 bg-neutral-100/90 p-0.5 w-full max-w-xs">
+          <button
+            type="button"
+            onClick={() => setMobileView("controls")}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-all cursor-pointer ${
+              mobileView === "controls"
+                ? "bg-white text-neutral-900 shadow-xs"
+                : "text-neutral-600 hover:text-neutral-900"
+            }`}
+          >
+            <Palette className="h-3.5 w-3.5 text-indigo-600" />
+            <span>Customize</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileView("preview")}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-all cursor-pointer ${
+              mobileView === "preview"
+                ? "bg-white text-neutral-900 shadow-xs"
+                : "text-neutral-600 hover:text-neutral-900"
+            }`}
+          >
+            <Eye className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Live Preview</span>
+          </button>
+        </div>
+      </div>
+
       {/* Left Column: Theme Customizer Controls */}
-      <div className="w-full lg:w-[440px] xl:w-[480px] flex-shrink-0 border-r border-neutral-200 bg-white p-6 sm:p-8 overflow-y-auto space-y-8">
+      <div
+        className={`${
+          mobileView === "controls" ? "flex flex-col w-full flex-1 min-h-0" : "hidden"
+        } lg:flex lg:flex-col lg:w-[440px] xl:w-[480px] lg:h-full flex-shrink-0 border-r border-neutral-200 bg-white p-4 sm:p-6 md:p-8 pb-24 sm:pb-16 overflow-y-auto space-y-6 sm:space-y-8`}
+      >
         <div>
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200/60">
@@ -135,7 +171,7 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-2.5">
             {COLOR_PRESETS.map((p) => {
               const isSelected = theme.accentColor.toLowerCase() === p.hex.toLowerCase();
               return (
@@ -144,30 +180,30 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
                   type="button"
                   onClick={() => actions.updateTheme({ accentColor: p.hex })}
                   aria-label={`Select ${p.label} accent color`}
-                  className={`group relative flex items-center justify-center gap-1.5 rounded-xl border p-2 text-xs font-medium transition-all cursor-pointer ${
+                  className={`group relative flex items-center justify-center gap-1.5 rounded-xl border p-2 text-xs font-medium transition-all cursor-pointer min-w-0 ${
                     isSelected
                       ? "border-neutral-900 bg-neutral-50 shadow-xs ring-2 ring-neutral-900"
                       : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
                   }`}
                 >
                   <span
-                    className="h-3.5 w-3.5 rounded-full shadow-2xs flex items-center justify-center text-white"
+                    className="h-3.5 w-3.5 rounded-full shadow-2xs flex items-center justify-center text-white flex-shrink-0"
                     style={{ backgroundColor: p.hex }}
                   >
                     {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
                   </span>
-                  <span className="text-[11px] text-neutral-700 font-semibold">{p.label}</span>
+                  <span className="text-[11px] text-neutral-700 font-semibold truncate">{p.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
             <input
               type="color"
               value={theme.accentColor}
               onChange={(e) => actions.updateTheme({ accentColor: e.target.value })}
-              className="h-8 w-10 cursor-pointer rounded-lg border border-neutral-300 p-0.5 bg-white"
+              className="h-8 w-10 cursor-pointer rounded-lg border border-neutral-300 p-0.5 bg-white flex-shrink-0"
               aria-label="Pick custom accent color"
             />
             <input
@@ -180,7 +216,7 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
                 }
               }}
               placeholder="#4f46e5"
-              className="w-28 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-mono text-neutral-800 uppercase focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-24 sm:w-28 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs font-mono text-neutral-800 uppercase focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
             />
             <span className="text-[11px] text-neutral-400">Custom hex color</span>
           </div>
@@ -195,7 +231,7 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
             </label>
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
             {[
               {
                 id: "sans" as ThemeFont,
@@ -278,7 +314,7 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {HEADER_IMAGE_PRESETS.map((preset) => (
               <button
                 key={preset.label}
@@ -287,7 +323,7 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
                   setHeaderInput(preset.url);
                   actions.updateTheme({ headerImage: preset.url });
                 }}
-                className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200 bg-white hover:border-indigo-400 hover:bg-neutral-50 text-left transition-all cursor-pointer"
+                className="flex items-center gap-2 p-1.5 rounded-lg border border-neutral-200 bg-white hover:border-indigo-400 hover:bg-neutral-50 text-left transition-all cursor-pointer min-w-0"
               >
                 <img
                   src={preset.url}
@@ -301,18 +337,18 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
             ))}
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
             <input
               type="url"
               value={headerInput}
               onChange={(e) => setHeaderInput(e.target.value)}
               placeholder="https://example.com/banner.jpg"
-              className="flex-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="flex-1 min-w-0 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             />
             <button
               type="button"
               onClick={() => actions.updateTheme({ headerImage: headerInput.trim() })}
-              className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700 transition-colors cursor-pointer"
+              className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700 transition-colors cursor-pointer flex-shrink-0"
             >
               Apply
             </button>
@@ -328,7 +364,7 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
             </label>
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {[
               {
                 id: "auto" as ThemeMode,
@@ -374,7 +410,9 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
 
       {/* Right Column: Instant Live Preview */}
       <div
-        className={`flex-1 p-6 sm:p-10 overflow-y-auto flex flex-col items-center justify-start transition-colors duration-200 ${
+        className={`${
+          mobileView === "preview" ? "flex flex-col w-full flex-1 min-h-0" : "hidden"
+        } lg:flex lg:flex-col flex-1 min-h-0 lg:h-full p-4 sm:p-6 md:p-10 pb-24 sm:pb-16 overflow-y-auto items-center justify-start transition-colors duration-200 ${
           theme.darkMode === "dark" || (theme.darkMode === "auto" && isSystemDark)
             ? "bg-neutral-950"
             : "bg-neutral-100/70"
@@ -391,7 +429,7 @@ export function FormThemeTab({ state, actions }: FormThemeTabProps) {
         </div>
 
         <div
-          className={`w-full max-w-2xl rounded-2xl border p-8 shadow-sm transition-all duration-300 ${
+          className={`w-full max-w-2xl rounded-2xl border p-4 sm:p-8 shadow-sm transition-all duration-300 ${
             theme.darkMode === "dark" || (theme.darkMode === "auto" && isSystemDark)
               ? "dark bg-neutral-900 border-neutral-800 text-neutral-100 shadow-2xl"
               : "bg-white border-neutral-200 text-neutral-900"

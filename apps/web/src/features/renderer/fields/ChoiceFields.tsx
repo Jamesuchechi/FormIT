@@ -11,7 +11,7 @@ export function MultipleChoiceInput({
   const otherText = isOther ? (value as { other: string }).other : "";
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {field.options.map((o) => (
         <label key={o.id} className={optionClass}>
           <input
@@ -21,26 +21,28 @@ export function MultipleChoiceInput({
             checked={value === o.id}
             onChange={() => onChange(o.id)}
             aria-describedby={ctl.describedBy}
-            className="size-4 accent-[var(--accent-color,#4f46e5)]"
+            className="size-5 accent-[var(--accent-color,#4f46e5)] flex-shrink-0 cursor-pointer"
           />
-          <span>{o.label}</span>
+          <span className="flex-1 select-none leading-snug">{o.label}</span>
         </label>
       ))}
 
       {field.allowOther && (
-        <div className={`${optionClass} flex items-center gap-2`}>
-          <input
-            type="radio"
-            name={ctl.id}
-            id={`${ctl.id}-other`}
-            checked={isOther}
-            onChange={() => onChange({ other: "" })}
-            aria-describedby={ctl.describedBy}
-            className="size-4 accent-[var(--accent-color,#4f46e5)] flex-shrink-0"
-          />
-          <label htmlFor={`${ctl.id}-other`} className="text-sm font-medium cursor-pointer select-none">
-            Other:
-          </label>
+        <div className={`${optionClass} flex flex-wrap sm:flex-nowrap items-center gap-2.5`}>
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <input
+              type="radio"
+              name={ctl.id}
+              id={`${ctl.id}-other`}
+              checked={isOther}
+              onChange={() => onChange({ other: "" })}
+              aria-describedby={ctl.describedBy}
+              className="size-5 accent-[var(--accent-color,#4f46e5)] flex-shrink-0 cursor-pointer"
+            />
+            <label htmlFor={`${ctl.id}-other`} className="text-base sm:text-sm font-medium cursor-pointer select-none">
+              Other:
+            </label>
+          </div>
           <input
             type="text"
             value={otherText}
@@ -49,7 +51,7 @@ export function MultipleChoiceInput({
               if (!isOther) onChange({ other: "" });
             }}
             onChange={(e) => onChange({ other: e.target.value })}
-            className="flex-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-indigo-500 focus:outline-none"
+            className="min-h-[40px] min-w-[140px] flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-base sm:text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-[var(--accent-color,#4f46e5)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-color,#4f46e5)]"
           />
         </div>
       )}
@@ -95,7 +97,7 @@ export function CheckboxesInput({ field, value, onChange, ctl }: FieldInputProps
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {field.options.map((o) => {
         const checked = selected.includes(o.id);
         return (
@@ -106,27 +108,29 @@ export function CheckboxesInput({ field, value, onChange, ctl }: FieldInputProps
               disabled={atMax && !checked}
               onChange={() => toggle(o.id)}
               aria-describedby={ctl.describedBy}
-              className="size-4 accent-[var(--accent-color,#4f46e5)]"
+              className="size-5 accent-[var(--accent-color,#4f46e5)] flex-shrink-0 cursor-pointer"
             />
-            <span>{o.label}</span>
+            <span className="flex-1 select-none leading-snug">{o.label}</span>
           </label>
         );
       })}
 
       {field.allowOther && (
-        <div className={`${optionClass} flex items-center gap-2`}>
-          <input
-            type="checkbox"
-            id={`${ctl.id}-other`}
-            checked={isOtherChecked}
-            disabled={atMax && !isOtherChecked}
-            onChange={toggleOther}
-            aria-describedby={ctl.describedBy}
-            className="size-4 accent-[var(--accent-color,#4f46e5)] flex-shrink-0"
-          />
-          <label htmlFor={`${ctl.id}-other`} className="text-sm font-medium cursor-pointer select-none">
-            Other:
-          </label>
+        <div className={`${optionClass} flex flex-wrap sm:flex-nowrap items-center gap-2.5`}>
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <input
+              type="checkbox"
+              id={`${ctl.id}-other`}
+              checked={isOtherChecked}
+              disabled={atMax && !isOtherChecked}
+              onChange={toggleOther}
+              aria-describedby={ctl.describedBy}
+              className="size-5 accent-[var(--accent-color,#4f46e5)] flex-shrink-0 cursor-pointer"
+            />
+            <label htmlFor={`${ctl.id}-other`} className="text-base sm:text-sm font-medium cursor-pointer select-none">
+              Other:
+            </label>
+          </div>
           <input
             type="text"
             value={otherText}
@@ -136,7 +140,7 @@ export function CheckboxesInput({ field, value, onChange, ctl }: FieldInputProps
               if (!isOtherChecked) toggleOther();
             }}
             onChange={(e) => handleOtherChange(e.target.value)}
-            className="flex-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-indigo-500 focus:outline-none disabled:bg-neutral-100 disabled:text-neutral-400"
+            className="min-h-[40px] min-w-[140px] flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-base sm:text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:border-[var(--accent-color,#4f46e5)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-color,#4f46e5)] disabled:bg-neutral-100 dark:disabled:bg-neutral-800/50 disabled:text-neutral-400"
           />
         </div>
       )}

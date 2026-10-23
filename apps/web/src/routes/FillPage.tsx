@@ -11,9 +11,9 @@ const SLUG = /^[a-z0-9][a-z0-9-]{2,62}$/;
 
 function Notice({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 text-center shadow-sm text-neutral-900 dark:text-neutral-100">
-      <h1 className="text-xl font-semibold">{title}</h1>
-      {children && <p className="mt-2 text-neutral-600 dark:text-neutral-400">{children}</p>}
+    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 text-center shadow-xs text-neutral-900 dark:text-neutral-100">
+      <h1 className="text-lg sm:text-xl font-semibold">{title}</h1>
+      {children && <p className="mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">{children}</p>}
     </div>
   );
 }
@@ -112,14 +112,14 @@ export function FillPage() {
     } else if (editData.form.requireSignIn && !session) {
       const redirectUrl = encodeURIComponent(location.pathname + location.search);
       content = (
-        <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 text-center shadow-sm text-neutral-900 dark:text-neutral-100">
-          <h1 className="text-xl font-semibold">Sign in required</h1>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+        <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 text-center shadow-xs text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-lg sm:text-xl font-semibold">Sign in required</h1>
+          <p className="mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
             The creator of this form requires you to sign in before responding.
           </p>
           <Link
             to={`/login?redirect=${redirectUrl}`}
-            className="mt-6 inline-block rounded-lg bg-indigo-600 px-5 py-2.5 font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-indigo-600 px-6 py-2.5 font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 w-full sm:w-auto"
           >
             Sign in to respond
           </Link>
@@ -180,14 +180,14 @@ export function FillPage() {
   } else if (form.requireSignIn && !session) {
     const redirectUrl = encodeURIComponent(location.pathname + location.search);
     content = (
-      <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 text-center shadow-sm text-neutral-900 dark:text-neutral-100">
-        <h1 className="text-xl font-semibold">Sign in required</h1>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+      <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 text-center shadow-xs text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-lg sm:text-xl font-semibold">Sign in required</h1>
+        <p className="mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
           The creator of this form requires you to sign in before responding.
         </p>
         <Link
           to={`/login?redirect=${redirectUrl}`}
-          className="mt-6 inline-block rounded-lg bg-indigo-600 px-5 py-2.5 font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+          className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-indigo-600 px-6 py-2.5 font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 w-full sm:w-auto"
         >
           Sign in to respond
         </Link>
@@ -203,7 +203,7 @@ export function FillPage() {
         isDarkMode ? "dark bg-neutral-950 text-neutral-100" : "bg-neutral-50 text-neutral-900"
       }`}
     >
-      <main className="mx-auto max-w-2xl px-4 py-8 sm:py-12 flex flex-col min-h-screen justify-between">
+      <main className="mx-auto max-w-2xl w-full px-3.5 sm:px-6 py-6 sm:py-10 md:py-12 flex flex-col min-h-screen justify-between pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div>{content}</div>
         <footer className="mt-12 pb-6 text-center">
           <Link

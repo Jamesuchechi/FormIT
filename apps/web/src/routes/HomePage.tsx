@@ -543,12 +543,13 @@ function LandingView() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-            <div className="grid grid-cols-3 p-4 sm:p-6 bg-neutral-100/60 border-b border-neutral-200 text-xs sm:text-sm font-bold text-neutral-900">
-              <div>Capability</div>
-              <div className="text-neutral-500">Legacy Form Builders</div>
-              <div className="text-indigo-600">FormIT</div>
-            </div>
+          <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-x-auto">
+            <div className="min-w-[540px]">
+              <div className="grid grid-cols-3 p-4 sm:p-6 bg-neutral-100/60 border-b border-neutral-200 text-xs sm:text-sm font-bold text-neutral-900">
+                <div>Capability</div>
+                <div className="text-neutral-500">Legacy Form Builders</div>
+                <div className="text-indigo-600">FormIT</div>
+              </div>
 
             {[
               {
@@ -591,6 +592,7 @@ function LandingView() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       </section>

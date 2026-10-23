@@ -98,14 +98,14 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
                   />
                 </svg>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                   Response editing enabled
                 </h2>
                 <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
                   You can edit your response later using this private link. Keep it safe to prevent others from altering your submission.
                 </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -114,13 +114,13 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
                         setTimeout(() => setCopiedLink(false), 2000);
                       });
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
+                    className="inline-flex min-h-[44px] justify-center items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors active:scale-95"
                   >
                     {copiedLink ? "✓ Copied to clipboard" : "Copy private edit link"}
                   </button>
                   <a
                     href={`/f/${form.slug}?edit=${s.editKey}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 dark:bg-neutral-100 px-3 py-1.5 text-xs font-medium text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-white/90 transition-colors"
+                    className="inline-flex min-h-[44px] justify-center items-center gap-1.5 rounded-lg bg-neutral-900 dark:bg-neutral-100 px-4 py-2 text-xs sm:text-sm font-medium text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-white/90 transition-colors active:scale-95"
                   >
                     Edit your response
                   </a>
@@ -157,22 +157,23 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
       </div>
 
       {/* Header Image Banner if configured */}
+      {/* Header Image Banner if configured */}
       {theme?.headerImage && (
-        <div className="relative overflow-hidden rounded-2xl mb-6 max-h-56 w-full shadow-xs border border-neutral-200/80 dark:border-neutral-800">
+        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl mb-6 max-h-56 w-full shadow-xs border border-neutral-200/80 dark:border-neutral-800">
           <img
             src={theme.headerImage}
             alt="Form header banner"
-            className="w-full h-40 sm:h-48 object-cover"
+            className="w-full h-36 sm:h-48 md:h-56 object-cover"
           />
         </div>
       )}
 
       <header ref={headerRef} className="scroll-mt-4">
-        <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
           {form.title}
         </h1>
         {form.schema.description && (
-          <p className="mt-2 whitespace-pre-line text-neutral-600 dark:text-neutral-400">
+          <p className="mt-2 whitespace-pre-line text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
             {form.schema.description}
           </p>
         )}
@@ -180,7 +181,7 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
 
       {total > 1 && (
         <div>
-          <div className="mb-1 flex justify-between text-sm text-neutral-500 dark:text-neutral-400">
+          <div className="mb-1.5 flex justify-between items-center text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400">
             <span>
               Page {s.step + 1} of {total}
             </span>
@@ -191,10 +192,10 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
             aria-valuemax={total}
             aria-valuenow={s.step + 1}
             aria-label="Form progress"
-            className="h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800"
+            className="h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800"
           >
             <div
-              className="h-full transition-all"
+              className="h-full transition-all duration-300"
               style={{
                 backgroundColor: accentColor,
                 width: `${((s.step + 1) / total) * 100}%`,
@@ -207,14 +208,14 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
       {current && (
         <section key={current.section.id} className="space-y-4">
           {(current.section.title || current.section.description) && (
-            <div>
+            <div className="pt-1">
               {current.section.title && (
-                <h2 className="text-xl font-medium text-neutral-900 dark:text-neutral-100">
+                <h2 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                   {current.section.title}
                 </h2>
               )}
               {current.section.description && (
-                <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+                <p className="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   {current.section.description}
                 </p>
               )}
@@ -244,23 +245,23 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
 
       {s.isLast && <Turnstile onToken={(t) => (tokenRef.current = t)} />}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
         {s.step > 0 ? (
           <button
             type="button"
             onClick={s.back}
-            className="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-5 py-2.5 font-medium text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-400/40 cursor-pointer disabled:opacity-60"
+            className="inline-flex min-h-[48px] justify-center items-center rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-6 py-3 text-base font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-400/40 cursor-pointer disabled:opacity-60 active:scale-[0.98] transition-all"
             disabled={submitting}
           >
             Back
           </button>
         ) : (
-          <span />
+          <span className="hidden sm:inline" />
         )}
         <button
           type="submit"
           style={{ backgroundColor: accentColor }}
-          className="rounded-lg px-5 py-2.5 font-medium text-white shadow-xs hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 transition-all cursor-pointer"
+          className="inline-flex min-h-[48px] justify-center items-center rounded-xl px-6 py-3 text-base font-semibold text-white shadow-xs hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 active:scale-[0.98] transition-all cursor-pointer"
           disabled={submitting}
         >
           {s.isLast

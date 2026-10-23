@@ -104,7 +104,7 @@ export function FieldPalette({ state, actions }: FieldPaletteProps) {
   }
 
   return (
-    <aside className="w-72 flex-shrink-0 border-r border-neutral-200 bg-white flex flex-col h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto">
+    <aside className="w-full lg:w-72 lg:flex-shrink-0 border-r border-neutral-200 bg-white flex flex-col h-full lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 overflow-y-auto">
       {/* Top Segmented Tabs: Elements vs Question Bank */}
       <div className="p-3 border-b border-neutral-200 bg-neutral-50/70">
         <div className="flex rounded-lg bg-neutral-200/70 p-0.5 text-xs font-medium">

@@ -170,34 +170,90 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
     previewTheme?.darkMode === "dark" ||
     (previewTheme?.darkMode === "auto" && isSystemDark);
 
+  const [mobileSubView, setMobileSubView] = useState<"canvas" | "palette" | "inspector">("canvas");
+
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-neutral-100">
+    <div className="flex h-screen max-h-[100dvh] w-screen flex-col overflow-hidden bg-neutral-100">
       {/* Top Builder Navigation */}
       <BuilderHeader state={state} actions={actions} />
 
       {/* Main Area based on Active Tab */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden flex-col min-h-0">
         {state.activeTab === "builder" && (
-          <>
-            {/* Left Column: Field Palette & Outline Tree */}
-            <FieldPalette state={state} actions={actions} />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            {/* On screens smaller than lg, show mobile view switch bar */}
+            <div className="flex lg:hidden items-center justify-between border-b border-neutral-200 bg-white px-3 py-2 flex-shrink-0">
+              <div className="flex items-center gap-1 w-full bg-neutral-100 p-0.5 rounded-lg text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => setMobileSubView("palette")}
+                  className={`flex-1 py-1.5 text-center rounded-md transition-all ${
+                    mobileSubView === "palette" ? "bg-white text-neutral-900 shadow-xs font-semibold" : "text-neutral-600"
+                  }`}
+                >
+                  + Add Fields
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileSubView("canvas")}
+                  className={`flex-1 py-1.5 text-center rounded-md transition-all ${
+                    mobileSubView === "canvas" ? "bg-white text-neutral-900 shadow-xs font-semibold" : "text-neutral-600"
+                  }`}
+                >
+                  Canvas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileSubView("inspector")}
+                  className={`flex-1 py-1.5 text-center rounded-md transition-all ${
+                    mobileSubView === "inspector" ? "bg-white text-neutral-900 shadow-xs font-semibold" : "text-neutral-600"
+                  }`}
+                >
+                  Inspector{state.selectedFieldId ? " •" : ""}
+                </button>
+              </div>
+            </div>
 
-            {/* Middle Column: Interactive Form Canvas */}
-            <BuilderCanvas state={state} actions={actions} />
+            {/* Main Columns Container */}
+            <div className="flex flex-1 overflow-hidden">
+              {/* Left Column: Field Palette & Outline Tree */}
+              <div
+                className={`h-full ${
+                  mobileSubView === "palette" ? "flex w-full" : "hidden"
+                } lg:flex lg:w-72 flex-shrink-0`}
+              >
+                <FieldPalette state={state} actions={actions} />
+              </div>
 
-            {/* Right Column: Field & Validation Inspector */}
-            <FieldInspector state={state} actions={actions} />
-          </>
+              {/* Middle Column: Interactive Form Canvas */}
+              <div
+                className={`h-full flex-1 overflow-hidden ${
+                  mobileSubView === "canvas" ? "flex flex-col" : "hidden"
+                } lg:flex lg:flex-col`}
+              >
+                <BuilderCanvas state={state} actions={actions} />
+              </div>
+
+              {/* Right Column: Field & Validation Inspector */}
+              <div
+                className={`h-full ${
+                  mobileSubView === "inspector" ? "flex w-full" : "hidden"
+                } lg:flex lg:w-80 flex-shrink-0`}
+              >
+                <FieldInspector state={state} actions={actions} />
+              </div>
+            </div>
+          </div>
         )}
 
         {state.activeTab === "settings" && (
-          <div className="flex-1 overflow-y-auto bg-neutral-50/50 p-6 sm:p-10">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-neutral-50/50">
             <FormSettingsTab state={state} actions={actions} />
           </div>
         )}
 
         {state.activeTab === "theme" && (
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-hidden min-h-0">
             <FormThemeTab state={state} actions={actions} />
           </div>
         )}
@@ -205,10 +261,10 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
         {state.activeTab === "preview" && (
           <div className="flex flex-1 flex-col overflow-hidden bg-neutral-100">
             {/* Preview device switch bar */}
-            <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-white px-4 sm:px-6 py-2.5">
               <div className="flex items-center gap-2 text-xs font-medium text-neutral-600">
-                <Sparkles className="h-4 w-4 text-indigo-600" />
-                <span>Interactive Preview Mode — responses are simulated locally</span>
+                <Sparkles className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+                <span className="truncate">Interactive Preview Mode — responses simulated locally</span>
               </div>
               <div className="flex items-center gap-1 rounded-lg bg-neutral-100 p-1">
                 <button
@@ -240,7 +296,7 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
 
             {/* Form Renderer Container */}
             <div
-              className={`flex-1 overflow-y-auto p-6 sm:p-10 flex justify-center transition-colors duration-200 ${
+              className={`flex-1 overflow-y-auto p-3 sm:p-6 md:p-10 flex justify-center transition-colors duration-200 ${
                 isPreviewDark ? "bg-neutral-950" : "bg-neutral-100"
               }`}
             >
@@ -251,8 +307,8 @@ function BuilderWorkspace({ initialForm, previewDevice, setPreviewDevice }: Work
                     : "bg-white border-neutral-200 text-neutral-900 shadow-sm"
                 } ${
                   previewDevice === "mobile"
-                    ? "max-w-sm rounded-[2.5rem] border-[10px] border-neutral-800 p-6 my-auto min-h-[600px]"
-                    : "max-w-2xl rounded-2xl border p-8 my-auto"
+                    ? "max-w-sm rounded-[2rem] sm:rounded-[2.5rem] border-[6px] sm:border-[10px] border-neutral-800 p-4 sm:p-6 my-auto min-h-[500px]"
+                    : "max-w-2xl rounded-xl sm:rounded-2xl border p-4 sm:p-8 my-auto"
                 }`}
               >
                 <FormFiller form={previewPublicForm} api={previewApi} />

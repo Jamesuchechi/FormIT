@@ -83,6 +83,7 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 - [x] Share dialog: copy link, QR code (canvas render & download, integrated in dashboard and builder)
 - [x] Empty states, loading skeletons, error boundaries
 - [x] Basic spam protection (honeypot trap field, server-side silent discard, optional Cloudflare Turnstile)
+- [x] Mobile responsiveness hardening: touch targets (>=44px), iOS auto-zoom prevention (16px base inputs), mobile linear scale touch cards, responsive subviews in builder, and safe area insets
 - [ ] E2E suite: build, fill, submit, view, export
 - [ ] Deploy (Vercel + Supabase cloud), custom domain, error monitoring
 - [ ] README screenshots, license (MIT added), tag `v1.0.0`

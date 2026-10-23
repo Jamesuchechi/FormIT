@@ -210,7 +210,7 @@ export function ResponsesPage() {
         </p>
       )}
 
-      <div role="tablist" className="mt-6 inline-flex rounded-lg bg-neutral-100 p-1">
+      <div role="tablist" className="mt-6 inline-flex w-full sm:w-auto rounded-lg bg-neutral-100 p-1">
         {(
           [
             ["summary", "Summary", BarChart3],
@@ -223,7 +223,7 @@ export function ResponsesPage() {
             role="tab"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`inline-flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               tab === key ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-600"
             }`}
           >
@@ -245,7 +245,7 @@ export function ResponsesPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+              <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white -mx-2 sm:mx-0 shadow-2xs">
                 <table className="min-w-full text-left text-sm">
                   <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
                     <tr>
