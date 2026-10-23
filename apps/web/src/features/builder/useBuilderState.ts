@@ -72,9 +72,9 @@ export function useBuilderState(initialForm: FormRecord): {
     [historyIndex],
   );
 
-  // Debounced autosave to Supabase (only when there are actual unsaved changes)
+  // Debounced autosave to Supabase (only when there are actual unsaved changes and user is not read-only)
   useEffect(() => {
-    if (!hasUnsavedChanges) {
+    if (!hasUnsavedChanges || form.currentUserRole === "viewer") {
       return;
     }
 
@@ -421,6 +421,7 @@ export function useBuilderState(initialForm: FormRecord): {
   );
 
   const saveNow = useCallback(async () => {
+    if (form.currentUserRole === "viewer") return;
     setIsSaving(true);
     try {
       const cleanTitle = (schema.title || "").trim();
@@ -438,7 +439,22 @@ export function useBuilderState(initialForm: FormRecord): {
     } finally {
       setIsSaving(false);
     }
-  }, [form.id, form.settings, form.status, form.opensAt, form.closesAt, schema]);
+  }, [form.id, form.settings, form.status, form.opensAt, form.closesAt, form.currentUserRole, schema]);
+
+  const restoreSchema = useCallback(
+    (newSchema: FormSchema) => {
+      commitSchema(newSchema);
+      setForm((prev) => ({
+        ...prev,
+        title: newSchema.title || prev.title,
+        schema: newSchema,
+      }));
+      const firstSection = newSchema.sections[0];
+      setSelectedSectionId(firstSection?.id ?? null);
+      setSelectedFieldId(firstSection?.fields[0]?.id ?? null);
+    },
+    [commitSchema],
+  );
 
   return {
     state: {
@@ -453,6 +469,7 @@ export function useBuilderState(initialForm: FormRecord): {
       saveError,
       canUndo: historyIndex > 0,
       canRedo: historyIndex < history.length - 1,
+      isReadOnly: form.currentUserRole === "viewer",
     },
     actions: {
       selectField,
@@ -479,6 +496,7 @@ export function useBuilderState(initialForm: FormRecord): {
       undo,
       redo,
       saveNow,
+      restoreSchema,
     },
   };
 }

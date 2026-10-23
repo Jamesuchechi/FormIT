@@ -7,6 +7,7 @@ import {
   CheckSquare,
   ChevronDown,
   CircleDot,
+  Eye,
   FileUp,
   FolderPlus,
   Layers,
@@ -94,17 +95,23 @@ export function FieldPalette({ state, actions }: FieldPaletteProps) {
   }, [combinedBankItems, bankSearch]);
 
   function handleAddField(type: FieldType) {
-    if (!currentSectionId) return;
+    if (!currentSectionId || state.isReadOnly) return;
     actions.addField(currentSectionId, type, selectedFieldId || undefined);
   }
 
   function handleInsertBankQuestion(template: FieldTemplate) {
-    if (!currentSectionId) return;
+    if (!currentSectionId || state.isReadOnly) return;
     actions.insertQuestion(currentSectionId, template, selectedFieldId || undefined);
   }
 
   return (
     <aside className="w-full lg:w-72 lg:flex-shrink-0 border-r border-neutral-200 bg-white flex flex-col h-full lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 overflow-y-auto">
+      {state.isReadOnly && (
+        <div className="bg-amber-50/90 border-b border-amber-200 px-3.5 py-2 text-xs text-amber-800 flex items-center gap-1.5 flex-shrink-0">
+          <Eye className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+          <span className="font-medium">Viewer mode · Read-only</span>
+        </div>
+      )}
       {/* Top Segmented Tabs: Elements vs Question Bank */}
       <div className="p-3 border-b border-neutral-200 bg-neutral-50/70">
         <div className="flex rounded-lg bg-neutral-200/70 p-0.5 text-xs font-medium">

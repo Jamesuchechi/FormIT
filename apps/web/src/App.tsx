@@ -19,6 +19,9 @@ const BuilderPage = lazy(() =>
 const ResponsesPage = lazy(() =>
   import("./routes/ResponsesPage.tsx").then((m) => ({ default: m.ResponsesPage })),
 );
+const InviteAcceptPage = lazy(() =>
+  import("./routes/InviteAcceptPage.tsx").then((m) => ({ default: m.InviteAcceptPage })),
+);
 const NotFoundPage = lazy(() =>
   import("./routes/NotFoundPage.tsx").then((m) => ({ default: m.NotFoundPage })),
 );
@@ -85,6 +88,7 @@ export function App() {
                           <Route path="/login" element={<LoginPage defaultMode="signin" />} />
                           <Route path="/signup" element={<LoginPage defaultMode="signup" />} />
                           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                          <Route path="/invite/:token" element={<InviteAcceptPage />} />
                           <Route path="*" element={<NotFoundPage />} />
                         </Routes>
                       </Suspense>

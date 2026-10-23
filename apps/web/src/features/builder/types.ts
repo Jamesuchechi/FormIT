@@ -16,6 +16,7 @@ export interface BuilderState {
   saveError: string | null;
   canUndo: boolean;
   canRedo: boolean;
+  isReadOnly?: boolean;
 }
 
 export interface BuilderActions {
@@ -55,4 +56,5 @@ export interface BuilderActions {
   undo: () => void;
   redo: () => void;
   saveNow: () => Promise<void>;
+  restoreSchema: (newSchema: FormSchema) => void;
 }

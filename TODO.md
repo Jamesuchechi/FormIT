@@ -106,10 +106,10 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 
 ## v2: collaboration and intelligence
 
-- [ ] Collaborators (viewer, editor) with invite flow
-- [ ] Teams / workspaces
-- [ ] Comments on fields while editing
-- [ ] Version history UI with restore
+- [x] Collaborators (viewer, editor) with invite flow
+- [x] Teams / workspaces
+- [x] Comments on fields while editing
+- [x] Version history UI with restore
 - [ ] Quiz mode: correct answers, points, instant or deferred scoring, feedback per answer
 - [ ] Grid / matrix questions, ranking questions, signature field
 - [ ] Branching to sections ("go to section X based on answer")

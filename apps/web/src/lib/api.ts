@@ -189,6 +189,7 @@ export type FormSettings = {
 export type FormRecord = {
   id: string;
   ownerId: string;
+  workspaceId?: string | null;
   slug: string;
   title: string;
   schema: FormSchema;
@@ -200,12 +201,16 @@ export type FormRecord = {
   createdAt: string;
   updatedAt: string;
   responseCount?: number;
+  currentUserRole?: "owner" | "editor" | "viewer";
 };
 
-function mapFormRow(row: Record<string, unknown>): FormRecord {
+function mapFormRow(row: Record<string, unknown>, currentUserId?: string): FormRecord {
+  const ownerId = String(row.owner_id);
+  const isOwner = currentUserId ? ownerId === currentUserId : false;
   return {
     id: String(row.id),
-    ownerId: String(row.owner_id),
+    ownerId,
+    workspaceId: (row.workspace_id as string | null) ?? null,
     slug: String(row.slug),
     title: String(row.title),
     schema: row.schema as FormSchema,
@@ -216,33 +221,68 @@ function mapFormRow(row: Record<string, unknown>): FormRecord {
     closesAt: (row.closes_at as string | null) ?? null,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
+    currentUserRole: isOwner ? "owner" : (row.current_user_role as "owner" | "editor" | "viewer") || undefined,
   };
 }
 
-/** Get all forms owned by the current authenticated user. */
-export async function getUserForms(): Promise<FormRecord[]> {
-  const { data: rows, error } = await supabase
+/** Get all forms accessible to the user, optionally filtered by workspaceId (null for personal forms). */
+export async function getUserForms(workspaceId?: string | null): Promise<FormRecord[]> {
+  const { data: userRes } = await supabase.auth.getUser();
+  const currentUserId = userRes?.user?.id;
+
+  let query = supabase
     .from("forms")
     .select("*, responses:responses(count)")
     .order("updated_at", { ascending: false });
 
+  if (workspaceId === null) {
+    query = query.is("workspace_id", null);
+  } else if (typeof workspaceId === "string") {
+    query = query.eq("workspace_id", workspaceId);
+  }
+
+  const { data: rows, error } = await query;
   if (error) throw error;
+
   const list = (rows || []) as unknown as Array<
     Record<string, unknown> & { responses?: Array<{ count: number }> }
   >;
   return list.map((row) => ({
-    ...mapFormRow(row),
+    ...mapFormRow(row, currentUserId),
     responseCount: row.responses?.[0]?.count ?? 0,
   }));
 }
 
 /** Get a single form by its ID for editing in the builder. */
 export async function getOwnerForm(id: string): Promise<FormRecord | null> {
+  const { data: userRes } = await supabase.auth.getUser();
+  const currentUserId = userRes?.user?.id;
+
   const { data: row, error } = await supabase.from("forms").select("*").eq("id", id).maybeSingle();
 
   if (error) throw error;
   if (!row) return null;
-  return mapFormRow(row);
+
+  const record = mapFormRow(row, currentUserId);
+  if (!record.currentUserRole && currentUserId) {
+    if (record.ownerId === currentUserId) {
+      record.currentUserRole = "owner";
+    } else {
+      // Check collaborator role
+      const { data: collab } = await supabase
+        .from("form_collaborators")
+        .select("role")
+        .eq("form_id", id)
+        .eq("user_id", currentUserId)
+        .maybeSingle();
+
+      if (collab?.role) {
+        record.currentUserRole = collab.role as "editor" | "viewer";
+      }
+    }
+  }
+
+  return record;
 }
 
 /** Create a new form with a fresh blank schema. */
@@ -250,6 +290,7 @@ export async function createForm(params: {
   title?: string;
   schema?: FormSchema;
   slug?: string;
+  workspaceId?: string | null;
 }): Promise<FormRecord> {
   const { data: userRes, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userRes.user) throw new ApiError("sign_in_required", 401);
@@ -285,12 +326,13 @@ export async function createForm(params: {
       schema,
       settings: {},
       status: "draft",
+      workspace_id: params.workspaceId || null,
     })
     .select()
     .single();
 
   if (error) throw error;
-  return mapFormRow(data);
+  return mapFormRow(data, userRes.user.id);
 }
 
 /** Update an existing form's schema, title, settings, or status. */
@@ -304,9 +346,14 @@ export async function updateForm(
     status?: "draft" | "open" | "closed";
     opensAt?: string | null;
     closesAt?: string | null;
+    workspaceId?: string | null;
   },
 ): Promise<FormRecord> {
   const patch: Record<string, unknown> = {};
+
+  if (updates.workspaceId !== undefined) {
+    patch.workspace_id = updates.workspaceId;
+  }
 
   if (updates.title !== undefined) {
     const cleanTitle = updates.title.trim();
@@ -470,3 +517,7 @@ export async function deleteAllResponses(formId: string): Promise<void> {
   const { error } = await supabase.from("responses").delete().eq("form_id", formId);
   if (error) throw error;
 }
+
+export * from "../features/collaboration/collaborationApi.ts";
+export * from "../features/collaboration/commentsApi.ts";
+export * from "../features/builder/versionsApi.ts";

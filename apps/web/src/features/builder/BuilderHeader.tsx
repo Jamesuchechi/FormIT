@@ -11,11 +11,15 @@ import {
   Undo2,
   Palette,
   Keyboard,
+  Users,
+  History,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ShareDialog } from "../../components/ShareDialog.tsx";
 import { FormitLogo } from "../../components/FormitLogo.tsx";
+import { CollaboratorsModal } from "../collaboration/CollaboratorsModal.tsx";
+import { VersionHistoryModal } from "./VersionHistoryModal.tsx";
 import type { BuilderActions, BuilderState } from "./types.ts";
 
 interface BuilderHeaderProps {
@@ -37,6 +41,11 @@ export function BuilderHeader({ state, actions, onOpenShortcuts }: BuilderHeader
     canRedo,
   } = state;
   const [shareOpen, setShareOpen] = useState(false);
+  const [collaboratorsOpen, setCollaboratorsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const isViewer = form.currentUserRole === "viewer";
+  const isEditor = form.currentUserRole === "editor";
 
   return (
     <header className="border-b border-neutral-200 bg-white sticky top-0 z-30">
@@ -56,8 +65,9 @@ export function BuilderHeader({ state, actions, onOpenShortcuts }: BuilderHeader
             <input
               type="text"
               value={schema.title}
+              disabled={isViewer}
               onChange={(e) => actions.updateTitle(e.target.value)}
-              className="font-semibold text-base sm:text-lg text-neutral-900 bg-transparent border border-transparent hover:border-neutral-300 focus:border-indigo-500 focus:bg-white rounded-md px-1.5 sm:px-2 py-0.5 outline-none transition-all truncate w-full max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-none"
+              className="font-semibold text-base sm:text-lg text-neutral-900 bg-transparent border border-transparent hover:border-neutral-300 focus:border-indigo-500 focus:bg-white rounded-md px-1.5 sm:px-2 py-0.5 outline-none transition-all truncate w-full max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-none disabled:hover:border-transparent"
               placeholder="Untitled form"
             />
             {form.status === "open" ? (
@@ -72,6 +82,25 @@ export function BuilderHeader({ state, actions, onOpenShortcuts }: BuilderHeader
             ) : (
               <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 flex-shrink-0">
                 <span>Draft</span>
+              </span>
+            )}
+
+            {isViewer && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700 flex-shrink-0"
+                title="You have read-only view access to this form"
+              >
+                <Eye className="h-3 w-3 text-slate-500" />
+                <span>Viewer</span>
+              </span>
+            )}
+            {isEditor && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-xs font-semibold text-indigo-700 flex-shrink-0"
+                title="You are an editor on this form"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                <span>Editor</span>
               </span>
             )}
           </div>
@@ -207,12 +236,53 @@ export function BuilderHeader({ state, actions, onOpenShortcuts }: BuilderHeader
             <span>Responses</span>
           </Link>
 
+          {/* History Button */}
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-2xs hover:bg-neutral-50 hover:text-neutral-900 transition-all cursor-pointer"
+            title="Version History & Checkpoints"
+          >
+            <History className="h-3.5 w-3.5 text-indigo-600" />
+            <span className="hidden sm:inline">History</span>
+          </button>
+
+          {historyOpen && (
+            <VersionHistoryModal
+              state={state}
+              actions={actions}
+              isOpen={historyOpen}
+              onClose={() => setHistoryOpen(false)}
+            />
+          )}
+
+          {/* Collaborate Button */}
+          <button
+            type="button"
+            onClick={() => setCollaboratorsOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-2xs hover:bg-neutral-50 hover:text-neutral-900 transition-all cursor-pointer"
+            title="Manage Collaborators"
+          >
+            <Users className="h-3.5 w-3.5 text-indigo-600" />
+            <span className="hidden sm:inline">Collaborate</span>
+          </button>
+
+          {collaboratorsOpen && (
+            <CollaboratorsModal
+              formId={form.id}
+              formTitle={schema.title}
+              isOpen={collaboratorsOpen}
+              onClose={() => setCollaboratorsOpen(false)}
+              currentUserRole={form.currentUserRole}
+            />
+          )}
+
           {/* Share / Publish Action */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setShareOpen(!shareOpen)}
-              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 sm:px-3.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-500 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 sm:px-3.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-500 transition-colors cursor-pointer"
             >
               <Share2 className="h-3.5 w-3.5" />
               <span>Share</span>

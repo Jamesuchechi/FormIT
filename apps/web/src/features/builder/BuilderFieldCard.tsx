@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { FIELD_TYPES, newId, type Field, type FieldOption, type FieldType } from "@formit/schema";
+import { useQuery } from "@tanstack/react-query";
 import {
   BookmarkPlus,
   Calendar,
@@ -8,6 +9,7 @@ import {
   FileSpreadsheet,
   GripVertical,
   Image as ImageIcon,
+  MessageSquare,
   Plus,
   Shuffle,
   Trash2,
@@ -16,6 +18,8 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { getFormComments } from "../collaboration/commentsApi.ts";
+import { FieldCommentsModal } from "../collaboration/FieldCommentsModal.tsx";
 import { SaveQuestionModal } from "../questionBank/SaveQuestionModal.tsx";
 import { ImportOptionsModal } from "./ImportOptionsModal.tsx";
 import type { BuilderActions } from "./types.ts";
@@ -27,6 +31,8 @@ interface BuilderFieldCardProps {
   onSelect: () => void;
   actions: BuilderActions;
   accentColor?: string;
+  isReadOnly?: boolean;
+  formId?: string;
 }
 
 export function BuilderFieldCard({
@@ -36,6 +42,8 @@ export function BuilderFieldCard({
   onSelect,
   actions,
   accentColor = "#4f46e5",
+  isReadOnly = false,
+  formId,
 }: BuilderFieldCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
@@ -48,6 +56,18 @@ export function BuilderFieldCard({
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+
+  // Fetch comments to display badge count
+  const { data: allComments = [] } = useQuery({
+    queryKey: ["form-comments", formId],
+    queryFn: () => (formId ? getFormComments(formId) : []),
+    enabled: Boolean(formId),
+  });
+
+  const fieldComments = allComments.filter((c) => c.fieldId === field.id);
+  const openCommentsCount = fieldComments.filter((c) => c.status === "open").length;
+  const totalCommentsCount = fieldComments.length;
 
   function handleAddOption() {
     if (
@@ -123,15 +143,17 @@ export function BuilderFieldCard({
       {/* Top Header Row: Drag Handle + Inline Label + Quick Actions */}
       <div className="flex items-start gap-3">
         {/* Drag Handle */}
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          title="Drag to reorder"
-          className="mt-1 cursor-grab rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 active:cursor-grabbing"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
+        {!isReadOnly && (
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            title="Drag to reorder"
+            className="mt-1 cursor-grab rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        )}
 
         {/* Question Header & Inline Inputs */}
         <div className="flex-1 min-w-0 space-y-1.5">
@@ -139,9 +161,10 @@ export function BuilderFieldCard({
             <input
               type="text"
               value={field.label}
+              disabled={isReadOnly}
               onChange={(e) => actions.updateField(sectionId, field.id, { label: e.target.value })}
               placeholder="Question title"
-              className="w-full text-base font-semibold text-neutral-900 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-0.5 transition-colors"
+              className="w-full text-base font-semibold text-neutral-900 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-0.5 transition-colors disabled:hover:border-transparent"
             />
             {field.required && (
               <span className="text-red-500 font-bold text-sm" title="Required">
@@ -153,9 +176,10 @@ export function BuilderFieldCard({
           <input
             type="text"
             value={field.helpText || ""}
+            disabled={isReadOnly}
             onChange={(e) => actions.updateField(sectionId, field.id, { helpText: e.target.value })}
             placeholder="Add description or instructions (optional)"
-            className="w-full text-xs text-neutral-500 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-0.5 transition-colors"
+            className="w-full text-xs text-neutral-500 bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-indigo-500 outline-none pb-0.5 transition-colors disabled:hover:border-transparent"
           />
 
           {field.imageUrl && (
@@ -165,79 +189,121 @@ export function BuilderFieldCard({
                 alt={field.imageAlt || field.label}
                 className="max-h-44 w-full object-contain rounded-md"
               />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.updateField(sectionId, field.id, {
-                    imageUrl: undefined,
-                    imageAlt: undefined,
-                  } as unknown as Partial<Field>);
-                }}
-                title="Remove image"
-                className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors cursor-pointer"
-              >
-                <X className="h-3 w-3" />
-              </button>
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    actions.updateField(sectionId, field.id, {
+                      imageUrl: undefined,
+                      imageAlt: undefined,
+                    } as unknown as Partial<Field>);
+                  }}
+                  title="Remove image"
+                  className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors cursor-pointer"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
           )}
         </div>
 
         {/* Top-Right Field Controls */}
         <div className="flex items-center gap-1.5">
-          {/* Type Selector Dropdown */}
-          <select
-            value={field.type}
-            onChange={(e) =>
-              actions.changeFieldType(sectionId, field.id, e.target.value as FieldType)
-            }
-            className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100 outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            {FIELD_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-              </option>
-            ))}
-          </select>
+          {/* Field Comments Button */}
+          {formId && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCommentsModalOpen(true);
+              }}
+              title={
+                openCommentsCount > 0
+                  ? `${openCommentsCount} unresolved comment(s)`
+                  : totalCommentsCount > 0
+                  ? `${totalCommentsCount} comment(s)`
+                  : "Comments on question"
+              }
+              className={`relative rounded-lg p-1.5 transition-colors cursor-pointer ${
+                openCommentsCount > 0
+                  ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 ring-1 ring-indigo-200"
+                  : totalCommentsCount > 0
+                  ? "text-neutral-600 hover:bg-neutral-100"
+                  : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+              }`}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              {openCommentsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-bold text-white shadow-xs">
+                  {openCommentsCount}
+                </span>
+              )}
+            </button>
+          )}
 
-          {/* Save to Question Bank Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsSaveModalOpen(true);
-            }}
-            title="Save to Question Bank"
-            className="rounded-lg p-1.5 text-neutral-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-          >
-            <BookmarkPlus className="h-3.5 w-3.5" />
-          </button>
+          {isReadOnly ? (
+            <span className="rounded-lg border border-neutral-200 bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600">
+              {field.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+            </span>
+          ) : (
+            <>
+              {/* Type Selector Dropdown */}
+              <select
+                value={field.type}
+                onChange={(e) =>
+                  actions.changeFieldType(sectionId, field.id, e.target.value as FieldType)
+                }
+                className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-100 outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {FIELD_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </option>
+                ))}
+              </select>
 
-          {/* Duplicate Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.duplicateField(sectionId, field.id);
-            }}
-            title="Duplicate question"
-            className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
-          >
-            <Copy className="h-3.5 w-3.5" />
-          </button>
+              {/* Save to Question Bank Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSaveModalOpen(true);
+                }}
+                title="Save to Question Bank"
+                className="rounded-lg p-1.5 text-neutral-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+              >
+                <BookmarkPlus className="h-3.5 w-3.5" />
+              </button>
 
-          {/* Delete Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.deleteField(sectionId, field.id);
-            }}
-            title="Delete question"
-            className="rounded-lg p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+              {/* Duplicate Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.duplicateField(sectionId, field.id);
+                }}
+                title="Duplicate question"
+                className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </button>
+
+              {/* Delete Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.deleteField(sectionId, field.id);
+                }}
+                title="Delete question"
+                className="rounded-lg p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -634,6 +700,17 @@ export function BuilderFieldCard({
               options: newOptions,
             } as unknown as Partial<Field>)
           }
+        />
+      )}
+
+      {formId && (
+        <FieldCommentsModal
+          formId={formId}
+          fieldId={field.id}
+          fieldLabel={field.label}
+          isOpen={isCommentsModalOpen}
+          onClose={() => setIsCommentsModalOpen(false)}
+          isReadOnly={isReadOnly}
         />
       )}
     </div>

@@ -37,7 +37,9 @@ import {
   getUserForms,
   updateForm,
   type FormRecord,
+  type Workspace,
 } from "../lib/api.ts";
+import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher.tsx";
 
 export function HomePage() {
   const { session } = useAuth();
@@ -688,6 +690,7 @@ function LandingView() {
 function DashboardView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
   const [query, setQuery] = useState("");
   const [shareTarget, setShareTarget] = useState<FormRecord | null>(null);
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
@@ -698,13 +701,16 @@ function DashboardView() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["user-forms"],
-    queryFn: getUserForms,
+    queryKey: ["user-forms", activeWorkspace?.id ?? "personal"],
+    queryFn: () => getUserForms(activeWorkspace ? activeWorkspace.id : null),
   });
 
   const createMutation = useMutation({
     mutationFn: (args?: { title?: string; schema?: FormSchema }) =>
-      createForm(args ?? { title: "Untitled Form" }),
+      createForm({
+        ...(args ?? { title: "Untitled Form" }),
+        workspaceId: activeWorkspace ? activeWorkspace.id : null,
+      }),
     onSuccess: (newForm) => {
       queryClient.invalidateQueries({ queryKey: ["user-forms"] });
       navigate(`/forms/${newForm.id}/edit`);
@@ -773,10 +779,14 @@ function DashboardView() {
       {/* Dashboard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-neutral-200/80">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
               Forms
             </h1>
+            <WorkspaceSwitcher
+              activeWorkspace={activeWorkspace}
+              onSelectWorkspace={setActiveWorkspace}
+            />
             {!isLoading && forms && forms.length > 0 && (
               <span className="inline-flex items-center rounded-full bg-neutral-200/80 px-2.5 py-0.5 text-xs font-bold text-neutral-700">
                 {forms.length}
@@ -784,7 +794,9 @@ function DashboardView() {
             )}
           </div>
           <p className="mt-1 text-sm text-neutral-500">
-            Create, manage, and inspect real-time responses across your workspace.
+            {activeWorkspace
+              ? `Collaborative workspace: ${activeWorkspace.name}`
+              : "Create, manage, and inspect real-time responses across your workspace."}
           </p>
         </div>
 
@@ -906,29 +918,38 @@ function DashboardView() {
                 <div>
                   {/* Status & Menu */}
                   <div className="flex items-center justify-between mb-3">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        form.status === "open"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : form.status === "closed"
-                            ? "bg-rose-50 text-rose-700"
-                            : "bg-neutral-100 text-neutral-600"
-                      }`}
-                    >
+                    <div className="flex items-center gap-1.5">
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                           form.status === "open"
-                            ? "bg-emerald-500"
+                            ? "bg-emerald-50 text-emerald-700"
                             : form.status === "closed"
-                              ? "bg-rose-500"
-                              : "bg-neutral-400"
+                              ? "bg-rose-50 text-rose-700"
+                              : "bg-neutral-100 text-neutral-600"
                         }`}
-                      />
-                      {form.status.toUpperCase()}
-                    </span>
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            form.status === "open"
+                              ? "bg-emerald-500"
+                              : form.status === "closed"
+                                ? "bg-rose-500"
+                                : "bg-neutral-400"
+                          }`}
+                        />
+                        {form.status.toUpperCase()}
+                      </span>
+
+                      {form.currentUserRole && form.currentUserRole !== "owner" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 capitalize">
+                          <Users className="h-3 w-3" />
+                          <span>{form.currentUserRole}</span>
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-1">
-                      {form.status !== "draft" && (
+                      {form.status !== "draft" && form.currentUserRole !== "viewer" && (
                         <button
                           type="button"
                           role="switch"
@@ -971,14 +992,16 @@ function DashboardView() {
                       >
                         <CopyPlus className="h-4 w-4" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(form)}
-                        title="Delete form"
-                        className="rounded-lg p-1.5 text-neutral-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {form.currentUserRole !== "viewer" && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(form)}
+                          title="Delete form"
+                          className="rounded-lg p-1.5 text-neutral-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
 

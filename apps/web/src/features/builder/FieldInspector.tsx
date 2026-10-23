@@ -2,6 +2,7 @@ import { allFields, type Field, type Rule, type RuleOp } from "@formit/schema";
 import {
   AlertCircle,
   BookmarkPlus,
+  Eye,
   FileSpreadsheet,
   Image as ImageIcon,
   Shuffle,
@@ -127,6 +128,12 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
 
   return (
     <aside className="w-full lg:w-80 lg:flex-shrink-0 border-l border-neutral-200 bg-white flex flex-col h-full lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 overflow-y-auto">
+      {state.isReadOnly && (
+        <div className="bg-amber-50/90 border-b border-amber-200 px-3.5 py-2 text-xs text-amber-800 flex items-center gap-1.5 flex-shrink-0">
+          <Eye className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+          <span className="font-medium">Viewer mode · Read-only</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-neutral-200">
         <div className="flex items-center gap-2">
