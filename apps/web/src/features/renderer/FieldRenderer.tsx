@@ -1,7 +1,10 @@
 import type { Field, FileAnswer } from "@formit/schema";
 import { CheckboxesInput, DropdownInput, MultipleChoiceInput } from "./fields/ChoiceFields.tsx";
 import { FileInput } from "./fields/FileField.tsx";
+import { MatrixInput } from "./fields/MatrixField.tsx";
+import { RankingInput } from "./fields/RankingField.tsx";
 import { DateInput, LinearScaleInput } from "./fields/ScaleAndDate.tsx";
+import { SignatureInput } from "./fields/SignatureField.tsx";
 import { LongTextInput, ShortTextInput } from "./fields/TextFields.tsx";
 import type { Control } from "./fields/types.ts";
 
@@ -14,7 +17,7 @@ type Props = {
 };
 
 /** Types that render several controls, so they get a fieldset/legend instead of label/for. */
-const GROUP_TYPES = new Set<Field["type"]>(["multiple_choice", "checkboxes", "linear_scale"]);
+const GROUP_TYPES = new Set<Field["type"]>(["multiple_choice", "checkboxes", "linear_scale", "matrix", "ranking"]);
 
 export function FieldRenderer({ field, value, errors, onChange, onUpload }: Props) {
   const invalid = !!errors?.length;
@@ -113,6 +116,12 @@ function renderInput(
       return (
         <FileInput field={field} value={value} onChange={onChange} ctl={ctl} onUpload={onUpload} />
       );
+    case "matrix":
+      return <MatrixInput field={field} value={value} onChange={onChange} ctl={ctl} />;
+    case "ranking":
+      return <RankingInput field={field} value={value} onChange={onChange} ctl={ctl} />;
+    case "signature":
+      return <SignatureInput field={field} value={value} onChange={onChange} ctl={ctl} />;
     default: {
       const _exhaustive: never = field;
       throw new Error(`Unhandled field type: ${JSON.stringify(_exhaustive)}`);

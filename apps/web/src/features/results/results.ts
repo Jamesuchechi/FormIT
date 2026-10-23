@@ -81,6 +81,32 @@ export function formatAnswer(field: Field, value: AnswerValue | undefined): stri
     }
     case "file_upload":
       return isFileAnswers(value) ? value.map((f) => f.name).join("; ") : "";
+    case "matrix": {
+      if (typeof value !== "object" || value === null) return String(value);
+      const rows = "rows" in field ? field.rows : [];
+      const cols = "columns" in field ? field.columns : [];
+      const rowMap = new Map(rows.map((r) => [r.id, r.label]));
+      const colMap = new Map(cols.map((c) => [c.id, c.label]));
+      const entries = Object.entries(value as Record<string, string | string[]>);
+      return entries
+        .map(([rowId, colVal]) => {
+          const rowLabel = rowMap.get(rowId) || rowId;
+          const colLabels = Array.isArray(colVal)
+            ? colVal.map((c) => colMap.get(c) || c).join(", ")
+            : colMap.get(String(colVal)) || String(colVal);
+          return `${rowLabel}: ${colLabels}`;
+        })
+        .join("; ");
+    }
+    case "ranking": {
+      if (!Array.isArray(value)) return String(value);
+      const opts = optionsOf(field);
+      return (value as string[])
+        .map((id, idx) => `${idx + 1}. ${opts.find((o) => o.id === id)?.label ?? id}`)
+        .join(", ");
+    }
+    case "signature":
+      return typeof value === "string" && value.startsWith("data:image/") ? "[Signature]" : String(value);
     default:
       return String(value);
   }

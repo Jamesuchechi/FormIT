@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { allFields, gradeQuizSubmission, type Field } from "@formit/schema";
 import type { FillApi, PublicForm, SubmitExtras } from "../../lib/api.ts";
 import { FieldRenderer } from "./FieldRenderer.tsx";
 import { Turnstile } from "./Turnstile.tsx";
@@ -59,25 +60,163 @@ export function FormFiller({ form, api, userId, initialAnswers, editKey }: Props
       ? `${window.location.origin}/f/${form.slug}?edit=${s.editKey}`
       : null;
 
+    const isQuiz = Boolean(form.settings?.quiz?.enabled);
+    const scoringMode = form.settings?.quiz?.scoringMode || "instant";
+    const showCorrectAnswers = form.settings?.quiz?.showCorrectAnswers !== false;
+    const showFeedback = form.settings?.quiz?.showFeedback !== false;
+
+    const quizResult = isQuiz && scoringMode === "instant"
+      ? gradeQuizSubmission(form.schema, s.answers)
+      : null;
+
+    const schemaFields = allFields(form.schema);
+    const fieldMap = new Map(schemaFields.map((f) => [f.id, f]));
+
+    const formatAnswer = (fieldId: string, val: unknown): string => {
+      if (val === undefined || val === null || val === "") return "(No answer)";
+      const field = fieldMap.get(fieldId);
+      if (field && "options" in field && field.options) {
+        const optMap = new Map(field.options.map((o) => [o.id, o.label]));
+        if (field.type === "ranking" && Array.isArray(val)) {
+          return val.map((id, i) => `${i + 1}. ${optMap.get(id) || id}`).join(" → ");
+        }
+        if (Array.isArray(val)) {
+          return val.map((id) => optMap.get(id) || id).join(", ");
+        }
+        return optMap.get(String(val)) || String(val);
+      }
+      if (Array.isArray(val)) return val.join(", ");
+      return String(val);
+    };
+
     return (
       <div
         role="status"
-        className={`rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 text-center shadow-sm text-neutral-900 dark:text-neutral-100 ${fontClass}`}
+        className={`rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 text-neutral-900 dark:text-neutral-100 shadow-sm ${fontClass}`}
       >
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mb-4">
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+        <div className="text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mb-4">
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold">{form.title}</h1>
+          <p className="mt-3 text-neutral-700 dark:text-neutral-300">{s.confirmation}</p>
         </div>
-        <h1 className="text-2xl font-semibold">{form.title}</h1>
-        <p className="mt-4 text-neutral-700 dark:text-neutral-300">{s.confirmation}</p>
+
+        {/* Deferred quiz mode notice */}
+        {isQuiz && scoringMode === "deferred" && (
+          <div className="mt-6 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 p-4 text-center">
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+              Quiz submitted! Scores and answers will be released later by the form creator.
+            </p>
+          </div>
+        )}
+
+        {/* Instant quiz score banner and breakdown */}
+        {quizResult && (
+          <div className="mt-8 space-y-6 text-left">
+            <div className="rounded-2xl border border-indigo-100 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 to-purple-50/50 dark:from-indigo-950/40 dark:to-purple-950/20 p-6 text-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                Quiz Result
+              </span>
+              <div className="mt-2 text-4xl sm:text-5xl font-extrabold text-neutral-900 dark:text-neutral-100 tracking-tight">
+                {quizResult.score} <span className="text-2xl font-medium text-neutral-400">/ {quizResult.totalPoints} pts</span>
+              </div>
+              <p className="mt-2 text-sm font-semibold text-indigo-700 dark:text-indigo-400">
+                {quizResult.percentage}% Score
+              </p>
+            </div>
+
+            {quizResult.items.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                  Question Breakdown
+                </h2>
+                {quizResult.items.map((res) => {
+                  const activeFeedback = res.isCorrect
+                    ? res.feedback?.correct || res.feedback?.general
+                    : res.feedback?.incorrect || res.feedback?.general;
+
+                  return (
+                    <div
+                      key={res.fieldId}
+                      className={`rounded-xl border p-4 sm:p-5 transition-colors ${
+                        res.isCorrect
+                          ? "border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10"
+                          : "border-red-200 dark:border-red-800/60 bg-red-50/20 dark:bg-red-950/10"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                                res.isCorrect
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                              }`}
+                            >
+                              {res.isCorrect ? "✓ Correct" : "✕ Incorrect"}
+                            </span>
+                            <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                              {res.pointsEarned} / {res.pointsPossible} pts
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                            {res.label}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-xs sm:text-sm space-y-1.5">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-medium text-neutral-500 dark:text-neutral-400">Your answer:</span>
+                          <span
+                            className={
+                              res.isCorrect
+                                ? "text-emerald-800 dark:text-emerald-300 font-medium"
+                                : "text-red-800 dark:text-red-300 line-through"
+                            }
+                          >
+                            {formatAnswer(res.fieldId, res.userAnswer)}
+                          </span>
+                        </div>
+
+                        {!res.isCorrect && showCorrectAnswers && res.correctAnswer !== undefined && (
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                              Correct answer:
+                            </span>
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                              {formatAnswer(res.fieldId, res.correctAnswer)}
+                            </span>
+                          </div>
+                        )}
+
+                        {showFeedback && activeFeedback && (
+                          <div className="mt-2.5 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/80 text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-100/50 dark:bg-neutral-800/40 p-2.5 rounded-lg">
+                            <span className="font-semibold text-neutral-800 dark:text-neutral-200 block mb-0.5">
+                              Feedback:
+                            </span>
+                            {activeFeedback}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {form.allowResponseEditing && s.editKey && editUrl && (
           <div className="mt-8 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 p-5 text-left">

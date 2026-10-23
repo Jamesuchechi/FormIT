@@ -1,10 +1,12 @@
-import { allFields, type Field, type Rule, type RuleOp } from "@formit/schema";
+import { allFields, newId, type Field, type Rule, type RuleOp } from "@formit/schema";
 import {
   AlertCircle,
+  Award,
   BookmarkPlus,
   Eye,
   FileSpreadsheet,
   Image as ImageIcon,
+  Plus,
   Shuffle,
   Sliders,
   Trash2,
@@ -24,7 +26,7 @@ interface FieldInspectorProps {
 
 export function FieldInspector({ state, actions }: FieldInspectorProps) {
   const { schema, selectedFieldId } = state;
-  const [tab, setTab] = useState<"general" | "logic">("general");
+  const [tab, setTab] = useState<"general" | "logic" | "quiz">("general");
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [imageInput, setImageInput] = useState("");
@@ -179,6 +181,20 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
           <Zap className="h-3 w-3 text-amber-500" />
           Logic {field.visibleIf && "•"}
         </button>
+        {state.form.settings.quiz?.enabled && (
+          <button
+            type="button"
+            onClick={() => setTab("quiz")}
+            className={`flex-1 rounded py-1.5 text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
+              tab === "quiz"
+                ? "bg-white text-purple-900 shadow-xs font-semibold"
+                : "text-purple-600 hover:text-purple-900"
+            }`}
+          >
+            <Award className="h-3.5 w-3.5 text-purple-600" />
+            Quiz {field.quiz?.points !== undefined && field.quiz.points > 0 ? `(${field.quiz.points}pt)` : ""}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 p-4 space-y-5 overflow-y-auto">
@@ -654,6 +670,228 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
               </div>
             )}
 
+            {field.type === "matrix" && (
+              <div className="space-y-4">
+                {/* Rows section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-neutral-700">Rows ({field.rows.length})</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newRow = { id: newId("r"), label: `Row ${field.rows.length + 1}` };
+                        actions.updateField(sectionId, field.id, {
+                          rows: [...field.rows, newRow],
+                        } as unknown as Partial<Field>);
+                      }}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="h-3 w-3" /> Add Row
+                    </button>
+                  </div>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {field.rows.map((row) => (
+                      <div key={row.id} className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={row.label}
+                          onChange={(e) => {
+                            const updated = field.rows.map((r) =>
+                              r.id === row.id ? { ...r, label: e.target.value } : r,
+                            );
+                            actions.updateField(sectionId, field.id, {
+                              rows: updated,
+                            } as unknown as Partial<Field>);
+                          }}
+                          className="flex-1 rounded border border-neutral-300 px-2 py-1 text-xs"
+                        />
+                        {field.rows.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              actions.updateField(sectionId, field.id, {
+                                rows: field.rows.filter((r) => r.id !== row.id),
+                              } as unknown as Partial<Field>);
+                            }}
+                            className="p-1 text-neutral-400 hover:text-red-600 cursor-pointer"
+                            title="Delete row"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Columns section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-neutral-700">Columns ({field.columns.length})</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newCol = { id: newId("c"), label: `Column ${field.columns.length + 1}` };
+                        actions.updateField(sectionId, field.id, {
+                          columns: [...field.columns, newCol],
+                        } as unknown as Partial<Field>);
+                      }}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="h-3 w-3" /> Add Column
+                    </button>
+                  </div>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {field.columns.map((col) => (
+                      <div key={col.id} className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={col.label}
+                          onChange={(e) => {
+                            const updated = field.columns.map((c) =>
+                              c.id === col.id ? { ...c, label: e.target.value } : c,
+                            );
+                            actions.updateField(sectionId, field.id, {
+                              columns: updated,
+                            } as unknown as Partial<Field>);
+                          }}
+                          className="flex-1 rounded border border-neutral-300 px-2 py-1 text-xs"
+                        />
+                        {field.columns.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              actions.updateField(sectionId, field.id, {
+                                columns: field.columns.filter((c) => c.id !== col.id),
+                              } as unknown as Partial<Field>);
+                            }}
+                            className="p-1 text-neutral-400 hover:text-red-600 cursor-pointer"
+                            title="Delete column"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Multiple selection per row */}
+                <label className="flex items-center gap-2 cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={field.multiplePerRow ?? false}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        multiplePerRow: e.target.checked,
+                      } as unknown as Partial<Field>)
+                    }
+                    className="rounded border-neutral-300 text-indigo-600"
+                  />
+                  <span className="text-xs text-neutral-700">Multiple selections per row (checkbox grid)</span>
+                </label>
+              </div>
+            )}
+
+            {field.type === "ranking" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-neutral-700">Items to Rank ({field.options.length})</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newOpt = { id: newId("o"), label: `Item ${field.options.length + 1}` };
+                      actions.updateField(sectionId, field.id, {
+                        options: [...field.options, newOpt],
+                      } as unknown as Partial<Field>);
+                    }}
+                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" /> Add Item
+                  </button>
+                </div>
+                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                  {field.options.map((opt, idx) => (
+                    <div key={opt.id} className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-neutral-400 font-mono w-4 text-center">{idx + 1}</span>
+                      <input
+                        type="text"
+                        value={opt.label}
+                        onChange={(e) => {
+                          const updated = field.options.map((o) =>
+                            o.id === opt.id ? { ...o, label: e.target.value } : o,
+                          );
+                          actions.updateField(sectionId, field.id, {
+                            options: updated,
+                          } as unknown as Partial<Field>);
+                        }}
+                        className="flex-1 rounded border border-neutral-300 px-2 py-1 text-xs"
+                      />
+                      {field.options.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            actions.updateField(sectionId, field.id, {
+                              options: field.options.filter((o) => o.id !== opt.id),
+                            } as unknown as Partial<Field>);
+                          }}
+                          className="p-1 text-neutral-400 hover:text-red-600 cursor-pointer"
+                          title="Delete item"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={field.shuffleOptions ?? false}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        shuffleOptions: e.target.checked,
+                      } as unknown as Partial<Field>)
+                    }
+                    className="rounded border-neutral-300 text-indigo-600"
+                  />
+                  <span className="text-xs text-neutral-700">Randomize initial order for respondents</span>
+                </label>
+              </div>
+            )}
+
+            {field.type === "signature" && (
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-neutral-700">Signature Settings</h4>
+                <div>
+                  <label className="text-[11px] text-neutral-600 block mb-1">Pen Stroke Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={field.penColor || "#0f172a"}
+                      onChange={(e) =>
+                        actions.updateField(sectionId, field.id, {
+                          penColor: e.target.value,
+                        } as unknown as Partial<Field>)
+                      }
+                      className="h-8 w-12 rounded border border-neutral-300 cursor-pointer p-0.5"
+                    />
+                    <input
+                      type="text"
+                      value={field.penColor || "#0f172a"}
+                      onChange={(e) =>
+                        actions.updateField(sectionId, field.id, {
+                          penColor: e.target.value,
+                        } as unknown as Partial<Field>)
+                      }
+                      className="w-24 rounded border border-neutral-300 px-2 py-1 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="pt-4 border-t border-neutral-200">
               <button
                 type="button"
@@ -665,6 +903,214 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
               </button>
             </div>
           </>
+        ) : tab === "quiz" ? (
+          /* Quiz Tab Content */
+          <div className="space-y-5">
+            <div>
+              <h4 className="text-xs font-semibold text-neutral-900 flex items-center gap-1.5">
+                <Award className="h-4 w-4 text-purple-600" />
+                Quiz Settings & Grading
+              </h4>
+              <p className="mt-0.5 text-[11px] text-neutral-500">
+                Configure question point value, correct answer(s), and score feedback.
+              </p>
+            </div>
+
+            {/* Points Value */}
+            <div className="rounded-xl border border-neutral-200 p-3 bg-neutral-50/50 space-y-2">
+              <label htmlFor="quiz-points-input" className="text-xs font-semibold text-neutral-800 block">
+                Points for this question
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="quiz-points-input"
+                  type="number"
+                  min={0}
+                  max={1000}
+                  value={field.quiz?.points ?? 1}
+                  onChange={(e) =>
+                    actions.updateField(sectionId, field.id, {
+                      quiz: {
+                        ...field.quiz,
+                        points: Math.max(0, parseInt(e.target.value, 10) || 0),
+                      },
+                    } as unknown as Partial<Field>)
+                  }
+                  className="w-24 rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-bold text-neutral-900 bg-white"
+                />
+                <span className="text-xs text-neutral-500">points</span>
+              </div>
+            </div>
+
+            {/* Correct Answer Selection */}
+            <div className="rounded-xl border border-neutral-200 p-3 bg-white space-y-2.5">
+              <h5 className="text-xs font-semibold text-neutral-800">Correct Answer</h5>
+
+              {"options" in field && (field.type === "multiple_choice" || field.type === "dropdown") && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] text-neutral-500 block">Select the correct option:</label>
+                  <select
+                    value={String(field.quiz?.correctAnswer ?? "")}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        quiz: {
+                          ...field.quiz,
+                          correctAnswer: e.target.value || undefined,
+                        },
+                      } as unknown as Partial<Field>)
+                    }
+                    className="w-full rounded-lg border border-neutral-300 p-2 text-xs bg-white"
+                  >
+                    <option value="">-- No correct answer set --</option>
+                    {field.options.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {field.type === "checkboxes" && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] text-neutral-500 block">Check all correct options:</label>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {field.options.map((opt) => {
+                      const current = Array.isArray(field.quiz?.correctAnswer)
+                        ? (field.quiz?.correctAnswer as string[])
+                        : [];
+                      const isChecked = current.includes(opt.id);
+                      return (
+                        <label key={opt.id} className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? [...current, opt.id]
+                                : current.filter((id) => id !== opt.id);
+                              actions.updateField(sectionId, field.id, {
+                                quiz: {
+                                  ...field.quiz,
+                                  correctAnswer: next.length > 0 ? next : undefined,
+                                },
+                              } as unknown as Partial<Field>);
+                            }}
+                            className="rounded border-neutral-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <span>{opt.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {field.type === "short_text" && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] text-neutral-500 block">
+                    Acceptable correct text (case-insensitive):
+                  </label>
+                  <input
+                    type="text"
+                    value={String(field.quiz?.correctAnswer ?? "")}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        quiz: {
+                          ...field.quiz,
+                          correctAnswer: e.target.value.trim() || undefined,
+                        },
+                      } as unknown as Partial<Field>)
+                    }
+                    placeholder="e.g. Paris"
+                    className="w-full rounded-lg border border-neutral-300 p-2 text-xs"
+                  />
+                </div>
+              )}
+
+              {field.type === "linear_scale" && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] text-neutral-500 block">Target score rating:</label>
+                  <select
+                    value={field.quiz?.correctAnswer !== undefined ? String(field.quiz.correctAnswer) : ""}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        quiz: {
+                          ...field.quiz,
+                          correctAnswer: e.target.value ? Number(e.target.value) : undefined,
+                        },
+                      } as unknown as Partial<Field>)
+                    }
+                    className="w-full rounded-lg border border-neutral-300 p-2 text-xs bg-white"
+                  >
+                    <option value="">-- No target score set --</option>
+                    {Array.from({ length: field.max - field.min + 1 }, (_, i) => field.min + i).map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {field.type === "ranking" && (
+                <p className="text-[11px] text-neutral-500 italic">
+                  The initial order defined in question options will be graded as the target ranking sequence.
+                </p>
+              )}
+            </div>
+
+            {/* Answer Feedback Section */}
+            <div className="rounded-xl border border-neutral-200 p-3 bg-white space-y-3">
+              <h5 className="text-xs font-semibold text-neutral-800">Answer Feedback (Optional)</h5>
+
+              <div>
+                <label className="text-[11px] text-emerald-700 font-medium block mb-1">
+                  Correct Answer Feedback
+                </label>
+                <textarea
+                  rows={2}
+                  value={field.quiz?.feedback?.correct ?? ""}
+                  onChange={(e) =>
+                    actions.updateField(sectionId, field.id, {
+                      quiz: {
+                        ...field.quiz,
+                        feedback: {
+                          ...field.quiz?.feedback,
+                          correct: e.target.value || undefined,
+                        },
+                      },
+                    } as unknown as Partial<Field>)
+                  }
+                  placeholder="e.g. Great job! That is correct."
+                  className="w-full rounded-lg border border-neutral-200 p-2 text-xs focus:border-purple-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] text-rose-700 font-medium block mb-1">
+                  Incorrect Answer Feedback
+                </label>
+                <textarea
+                  rows={2}
+                  value={field.quiz?.feedback?.incorrect ?? ""}
+                  onChange={(e) =>
+                    actions.updateField(sectionId, field.id, {
+                      quiz: {
+                        ...field.quiz,
+                        feedback: {
+                          ...field.quiz?.feedback,
+                          incorrect: e.target.value || undefined,
+                        },
+                      },
+                    } as unknown as Partial<Field>)
+                  }
+                  placeholder="e.g. Nice try. Review chapter 3 for details."
+                  className="w-full rounded-lg border border-neutral-200 p-2 text-xs focus:border-purple-500 outline-none"
+                />
+              </div>
+            </div>
+          </div>
         ) : (
           /* Conditional Logic Tab */
           <div className="space-y-4">

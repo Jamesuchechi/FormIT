@@ -3,13 +3,17 @@ import { CSS } from "@dnd-kit/utilities";
 import { FIELD_TYPES, newId, type Field, type FieldOption, type FieldType } from "@formit/schema";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowUpDown,
+  Award,
   BookmarkPlus,
   Calendar,
   Copy,
   FileSpreadsheet,
+  Grid,
   GripVertical,
   Image as ImageIcon,
   MessageSquare,
+  PenTool,
   Plus,
   Shuffle,
   Trash2,
@@ -169,6 +173,15 @@ export function BuilderFieldCard({
             {field.required && (
               <span className="text-red-500 font-bold text-sm" title="Required">
                 *
+              </span>
+            )}
+            {field.quiz?.points !== undefined && field.quiz.points > 0 && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-purple-50 border border-purple-200 px-2 py-0.5 text-[10px] font-bold text-purple-700 flex-shrink-0"
+                title={`Quiz question: ${field.quiz.points} points`}
+              >
+                <Award className="h-3 w-3 text-purple-600" />
+                {field.quiz.points} {field.quiz.points === 1 ? "pt" : "pts"}
               </span>
             )}
           </div>
@@ -672,6 +685,68 @@ export function BuilderFieldCard({
             <span className="text-[10px] text-neutral-400 mt-0.5">
               Up to {field.validation.maxSizeMb} MB
             </span>
+          </div>
+        )}
+
+        {/* Matrix / Grid Field */}
+        {field.type === "matrix" && (
+          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-2xs p-3">
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="border-b border-neutral-100">
+                  <th className="py-2 px-3 text-left font-medium text-neutral-400"></th>
+                  {field.columns.map((col) => (
+                    <th key={col.id} className="py-2 px-3 text-center font-medium text-neutral-700 whitespace-nowrap">
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {field.rows.map((row) => (
+                  <tr key={row.id} className="border-b border-neutral-50 last:border-b-0 hover:bg-neutral-50/50">
+                    <td className="py-2.5 px-3 font-medium text-neutral-800 whitespace-nowrap">{row.label}</td>
+                    {field.columns.map((col) => (
+                      <td key={col.id} className="py-2.5 px-3 text-center">
+                        <div
+                          className={`mx-auto h-4 w-4 rounded-${
+                            field.multiplePerRow ? "md" : "full"
+                          } border border-neutral-300 bg-neutral-50`}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Ranking Field */}
+        {field.type === "ranking" && (
+          <div className="space-y-2 max-w-md">
+            {field.options.map((opt, idx) => (
+              <div
+                key={opt.id}
+                className="flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-800 shadow-2xs"
+              >
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-600">
+                  {idx + 1}
+                </span>
+                <span className="font-medium flex-1">{opt.label}</span>
+                <ArrowUpDown className="h-3.5 w-3.5 text-neutral-400" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Signature Field */}
+        {field.type === "signature" && (
+          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50/40 p-6 text-center text-xs text-neutral-400">
+            <PenTool className="h-6 w-6 text-neutral-400 mb-1" />
+            <span className="font-medium text-neutral-600">Signature area</span>
+            <div className="mt-4 w-48 border-b-2 border-neutral-300"></div>
+            <span className="text-[10px] text-neutral-400 mt-1">Respondent signs on touchscreen or mouse</span>
           </div>
         )}
 

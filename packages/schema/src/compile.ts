@@ -169,6 +169,52 @@ function fileUpload(f: FieldOf<"file_upload">): z.ZodType<unknown> {
   });
 }
 
+function matrix(f: FieldOf<"matrix">): z.ZodType<unknown> {
+  const rowIds = new Set(f.rows.map((r) => r.id));
+  const colIds = new Set(f.columns.map((c) => c.id));
+
+  return z.record(z.string(), z.union([z.string(), z.array(z.string())])).superRefine((val, ctx) => {
+    for (const [rId, cVal] of Object.entries(val)) {
+      if (!rowIds.has(rId)) {
+        ctx.addIssue({ code: "custom", message: `Unknown row id: ${rId}` });
+      }
+      if (Array.isArray(cVal)) {
+        for (const cId of cVal) {
+          if (!colIds.has(cId)) {
+            ctx.addIssue({ code: "custom", message: `Unknown column id: ${cId}` });
+          }
+        }
+      } else if (typeof cVal === "string") {
+        if (!colIds.has(cVal)) {
+          ctx.addIssue({ code: "custom", message: `Unknown column id: ${cVal}` });
+        }
+      }
+    }
+  });
+}
+
+function ranking(f: FieldOf<"ranking">): z.ZodType<unknown> {
+  const validOptionIds = new Set(f.options.map((o) => o.id));
+  return z.array(z.string()).superRefine((arr, ctx) => {
+    if (new Set(arr).size !== arr.length) {
+      ctx.addIssue({ code: "custom", message: "Duplicate items in ranking" });
+    }
+    for (const optId of arr) {
+      if (!validOptionIds.has(optId)) {
+        ctx.addIssue({ code: "custom", message: `Unknown ranking option: ${optId}` });
+      }
+    }
+  });
+}
+
+function signature(_f: FieldOf<"signature">): z.ZodType<unknown> {
+  return z
+    .string()
+    .trim()
+    .min(1, "Signature cannot be empty")
+    .max(500_000, "Signature data exceeds maximum size");
+}
+
 /** Build the validator for a single field's (non-empty) answer. */
 export function fieldValidator(field: Field): z.ZodType<unknown> {
   switch (field.type) {
@@ -187,6 +233,12 @@ export function fieldValidator(field: Field): z.ZodType<unknown> {
       return date(field);
     case "file_upload":
       return fileUpload(field);
+    case "matrix":
+      return matrix(field);
+    case "ranking":
+      return ranking(field);
+    case "signature":
+      return signature(field);
     default: {
       const _exhaustive: never = field;
       throw new Error(`Unhandled field type: ${JSON.stringify(_exhaustive)}`);

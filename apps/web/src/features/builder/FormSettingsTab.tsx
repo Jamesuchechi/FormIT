@@ -1,5 +1,5 @@
 import { isValidSlug, allFields } from "@formit/schema";
-import { Check, Globe, Lock, Mail, ShieldCheck, Timer } from "lucide-react";
+import { Award, Check, Globe, Lock, Mail, ShieldCheck, Timer } from "lucide-react";
 import { useMemo, useState } from "react";
 import { isSlugAvailable } from "../../lib/api.ts";
 import type { BuilderActions, BuilderState } from "./types.ts";
@@ -399,6 +399,141 @@ export function FormSettingsTab({ state, actions }: FormSettingsTabProps) {
           placeholder="Your response has been recorded. Thank you!"
           className="w-full rounded-lg border border-neutral-300 p-3 text-xs text-neutral-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
         />
+      </div>
+
+      {/* Quiz Mode Card */}
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 shadow-xs space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-purple-600 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-900">Quiz Mode</h3>
+              <p className="text-xs text-neutral-500">
+                Score responses, assign points per question, and provide correct answer feedback.
+              </p>
+            </div>
+          </div>
+
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              aria-label="Toggle Quiz Mode"
+              checked={form.settings.quiz?.enabled ?? false}
+              onChange={(e) => {
+                const enabled = e.target.checked;
+                actions.updateSettings({
+                  quiz: {
+                    enabled,
+                    scoringMode: form.settings.quiz?.scoringMode ?? "instant",
+                    showCorrectAnswers: form.settings.quiz?.showCorrectAnswers ?? true,
+                    showFeedback: form.settings.quiz?.showFeedback ?? true,
+                  },
+                });
+              }}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+          </label>
+        </div>
+
+        {form.settings.quiz?.enabled && (
+          <div className="pt-3 border-t border-neutral-100 space-y-4 text-xs">
+            {/* Scoring Mode */}
+            <div>
+              <label className="font-semibold text-neutral-900 block mb-2">
+                Score Release Mode
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() =>
+                    actions.updateSettings({
+                      quiz: {
+                        ...form.settings.quiz!,
+                        scoringMode: "instant",
+                      },
+                    })
+                  }
+                  className={`flex flex-col text-left p-3 rounded-lg border transition-all cursor-pointer ${
+                    form.settings.quiz.scoringMode === "instant"
+                      ? "border-purple-600 bg-purple-50/50 ring-1 ring-purple-600"
+                      : "border-neutral-200 hover:border-neutral-300 bg-white"
+                  }`}
+                >
+                  <span className="font-semibold text-neutral-900">Instant Release</span>
+                  <span className="text-[11px] text-neutral-500 mt-1">
+                    Respondents see their total score and feedback immediately upon submission.
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    actions.updateSettings({
+                      quiz: {
+                        ...form.settings.quiz!,
+                        scoringMode: "deferred",
+                      },
+                    })
+                  }
+                  className={`flex flex-col text-left p-3 rounded-lg border transition-all cursor-pointer ${
+                    form.settings.quiz.scoringMode === "deferred"
+                      ? "border-purple-600 bg-purple-50/50 ring-1 ring-purple-600"
+                      : "border-neutral-200 hover:border-neutral-300 bg-white"
+                  }`}
+                >
+                  <span className="font-semibold text-neutral-900">Deferred Release</span>
+                  <span className="text-[11px] text-neutral-500 mt-1">
+                    Scores remain hidden from respondents until reviewed or released by the creator.
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Instant options */}
+            {form.settings.quiz.scoringMode === "instant" && (
+              <div className="space-y-2.5 pt-2 border-t border-neutral-100">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.settings.quiz.showCorrectAnswers ?? true}
+                    onChange={(e) =>
+                      actions.updateSettings({
+                        quiz: {
+                          ...form.settings.quiz!,
+                          showCorrectAnswers: e.target.checked,
+                        },
+                      })
+                    }
+                    className="rounded border-neutral-300 text-purple-600 focus:ring-purple-500 h-4 w-4"
+                  />
+                  <span className="text-neutral-800 font-medium">
+                    Reveal correct answers in score summary
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.settings.quiz.showFeedback ?? true}
+                    onChange={(e) =>
+                      actions.updateSettings({
+                        quiz: {
+                          ...form.settings.quiz!,
+                          showFeedback: e.target.checked,
+                        },
+                      })
+                    }
+                    className="rounded border-neutral-300 text-purple-600 focus:ring-purple-500 h-4 w-4"
+                  />
+                  <span className="text-neutral-800 font-medium">
+                    Show question feedback explanations
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

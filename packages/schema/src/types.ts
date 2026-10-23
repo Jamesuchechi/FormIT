@@ -13,6 +13,9 @@ export const FIELD_TYPES = [
   "linear_scale",
   "date",
   "file_upload",
+  "matrix",
+  "ranking",
+  "signature",
 ] as const;
 export type FieldType = (typeof FIELD_TYPES)[number];
 
@@ -39,6 +42,8 @@ export const LIMITS = {
   maxPatternLength: 200,
   maxFiles: 10,
   maxFileSizeMb: 100,
+  maxMatrixRows: 50,
+  maxMatrixColumns: 20,
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -85,6 +90,21 @@ export type FieldOption = z.infer<typeof optionSchema>;
 
 const options = z.array(optionSchema).min(1).max(LIMITS.maxOptions);
 
+export const fieldQuizSchema = z
+  .object({
+    points: z.number().int().min(0).max(1000).optional(),
+    correctAnswer: z.unknown().optional(),
+    feedback: z
+      .object({
+        correct: z.string().max(1000).optional(),
+        incorrect: z.string().max(1000).optional(),
+        general: z.string().max(1000).optional(),
+      })
+      .optional(),
+  })
+  .optional();
+export type FieldQuizConfig = z.infer<typeof fieldQuizSchema>;
+
 const base = {
   id: idSchema,
   label: z.string().trim().min(1).max(500),
@@ -93,6 +113,7 @@ const base = {
   imageAlt: z.string().max(300).optional(),
   required: z.boolean().default(false),
   visibleIf: ruleSchema.optional(),
+  quiz: fieldQuizSchema,
 };
 
 const shortText = z.object({
@@ -189,6 +210,40 @@ const fileUpload = z.object({
     .default({}),
 });
 
+const matrixRow = z.object({
+  id: idSchema,
+  label: z.string().trim().min(1).max(300),
+});
+export type MatrixRow = z.infer<typeof matrixRow>;
+
+const matrixColumn = z.object({
+  id: idSchema,
+  label: z.string().trim().min(1).max(300),
+});
+export type MatrixColumn = z.infer<typeof matrixColumn>;
+
+const matrixField = z.object({
+  ...base,
+  type: z.literal("matrix"),
+  rows: z.array(matrixRow).min(1).max(LIMITS.maxMatrixRows),
+  columns: z.array(matrixColumn).min(1).max(LIMITS.maxMatrixColumns),
+  multiplePerRow: z.boolean().default(false).optional(),
+});
+
+const rankingField = z.object({
+  ...base,
+  type: z.literal("ranking"),
+  options,
+  shuffleOptions: z.boolean().default(false).optional(),
+});
+
+const signatureField = z.object({
+  ...base,
+  type: z.literal("signature"),
+  penColor: z.string().max(30).optional(),
+  backgroundColor: z.string().max(30).optional(),
+});
+
 export const fieldSchema = z.discriminatedUnion("type", [
   shortText,
   longText,
@@ -198,6 +253,9 @@ export const fieldSchema = z.discriminatedUnion("type", [
   linearScale,
   dateField,
   fileUpload,
+  matrixField,
+  rankingField,
+  signatureField,
 ]);
 export type Field = z.infer<typeof fieldSchema>;
 export type FieldOf<T extends FieldType> = Extract<Field, { type: T }>;
@@ -265,5 +323,7 @@ export type AnswerValue =
   | number
   | (string | OtherAnswer)[]
   | OtherAnswer
-  | FileAnswer[];
+  | FileAnswer[]
+  | Record<string, string | string[]>
+  | string[];
 export type Answers = Record<string, AnswerValue>;

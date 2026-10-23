@@ -96,6 +96,49 @@ export const FIELD_REGISTRY: { [T in FieldType]: RegistryEntry<T> } = {
       validation: { maxFiles: 1, maxSizeMb: 10 },
     }),
   },
+  matrix: {
+    label: "Grid / Matrix",
+    create: (id) => ({
+      id,
+      type: "matrix",
+      label: "Untitled grid question",
+      required: false,
+      rows: [
+        { id: newId("r"), label: "Row 1" },
+        { id: newId("r"), label: "Row 2" },
+      ],
+      columns: [
+        { id: newId("c"), label: "Column 1" },
+        { id: newId("c"), label: "Column 2" },
+        { id: newId("c"), label: "Column 3" },
+      ],
+      multiplePerRow: false,
+    }),
+  },
+  ranking: {
+    label: "Ranking",
+    create: (id) => ({
+      id,
+      type: "ranking",
+      label: "Untitled ranking question",
+      required: false,
+      options: [
+        { id: newId("o"), label: "Item 1" },
+        { id: newId("o"), label: "Item 2" },
+        { id: newId("o"), label: "Item 3" },
+      ],
+    }),
+  },
+  signature: {
+    label: "Signature",
+    create: (id) => ({
+      id,
+      type: "signature",
+      label: "Signature",
+      required: false,
+      penColor: "#0f172a",
+    }),
+  },
 };
 
 /** Create a new field of the given type. */

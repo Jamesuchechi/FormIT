@@ -110,8 +110,8 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 - [x] Teams / workspaces
 - [x] Comments on fields while editing
 - [x] Version history UI with restore
-- [ ] Quiz mode: correct answers, points, instant or deferred scoring, feedback per answer
-- [ ] Grid / matrix questions, ranking questions, signature field
+- [x] Quiz mode: correct answers, points, instant or deferred scoring, feedback per answer
+- [x] Grid / matrix questions, ranking questions, signature field
 - [ ] Branching to sections ("go to section X based on answer")
 - [ ] Calculated fields and hidden fields (URL params prefill, e.g. `?source=email`)
 - [ ] AI form generation from a prompt or pasted doc

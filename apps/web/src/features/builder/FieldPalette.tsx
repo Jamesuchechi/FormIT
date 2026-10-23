@@ -2,6 +2,7 @@ import { FIELD_TYPES, type Field, type FieldType } from "@formit/schema";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlignLeft,
+  ArrowUpDown,
   BookOpen,
   Calendar,
   CheckSquare,
@@ -10,7 +11,9 @@ import {
   Eye,
   FileUp,
   FolderPlus,
+  Grid,
   Layers,
+  PenTool,
   Plus,
   Search,
   Sliders,
@@ -37,6 +40,9 @@ const FIELD_ICONS: Record<FieldType, ReactNode> = {
   linear_scale: <Sliders className="h-4 w-4 text-purple-500" />,
   date: <Calendar className="h-4 w-4 text-pink-500" />,
   file_upload: <FileUp className="h-4 w-4 text-rose-500" />,
+  matrix: <Grid className="h-4 w-4 text-cyan-500" />,
+  ranking: <ArrowUpDown className="h-4 w-4 text-orange-500" />,
+  signature: <PenTool className="h-4 w-4 text-violet-500" />,
 };
 
 const FIELD_TITLES: Record<FieldType, { name: string; desc: string }> = {
@@ -48,6 +54,9 @@ const FIELD_TITLES: Record<FieldType, { name: string; desc: string }> = {
   linear_scale: { name: "Rating scale", desc: "1 to 5 or custom score" },
   date: { name: "Date", desc: "Calendar date picker" },
   file_upload: { name: "File upload", desc: "Documents, images, resumes" },
+  matrix: { name: "Grid / Matrix", desc: "Rows and columns table" },
+  ranking: { name: "Ranking", desc: "Drag to order items" },
+  signature: { name: "Signature", desc: "Digital canvas signature pad" },
 };
 
 export function FieldPalette({ state, actions }: FieldPaletteProps) {

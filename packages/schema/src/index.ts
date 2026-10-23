@@ -5,3 +5,4 @@ export * from "./compile.ts";
 export * from "./integrity.ts";
 export * from "./slug.ts";
 export { newId, isRealDate } from "./util.ts";
+export * from "./quiz.ts";

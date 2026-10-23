@@ -158,6 +158,27 @@ function checkFieldConfig(
       }
       break;
     }
+    case "ranking": {
+      const seen = new Set<string>();
+      for (const o of f.options) {
+        if (seen.has(o.id)) push("duplicate_option_id", `Duplicate option id "${o.id}"`, f.id);
+        seen.add(o.id);
+      }
+      break;
+    }
+    case "matrix": {
+      const seenRows = new Set<string>();
+      for (const r of f.rows) {
+        if (seenRows.has(r.id)) push("duplicate_option_id", `Duplicate row id "${r.id}"`, f.id);
+        seenRows.add(r.id);
+      }
+      const seenCols = new Set<string>();
+      for (const c of f.columns) {
+        if (seenCols.has(c.id)) push("duplicate_option_id", `Duplicate column id "${c.id}"`, f.id);
+        seenCols.add(c.id);
+      }
+      break;
+    }
     default:
       break;
   }

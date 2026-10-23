@@ -91,6 +91,12 @@ export function ResponseDetail({
                     </li>
                   ))}
                 </ul>
+              ) : field.type === "signature" &&
+                typeof value === "string" &&
+                value.startsWith("data:image/") ? (
+                <div className="mt-2 inline-block rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white p-2">
+                  <img src={value} alt="Signature" className="h-20 max-w-xs object-contain" />
+                </div>
               ) : (
                 <p className="mt-1 whitespace-pre-wrap break-words text-sm text-neutral-700">
                   {text || <span className="text-neutral-400">No answer</span>}

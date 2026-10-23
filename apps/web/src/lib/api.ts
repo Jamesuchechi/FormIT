@@ -34,6 +34,7 @@ export type PublicForm = {
   requireSignIn: boolean;
   confirmationMessage: string | null;
   allowResponseEditing?: boolean;
+  settings?: FormSettings;
 };
 
 /** Load an open form for the fill page. Null when it doesn't exist, is closed, or is out of schedule. */
@@ -54,6 +55,7 @@ export async function getPublicForm(slug: string): Promise<PublicForm | null> {
     requireSignIn: data.require_sign_in,
     confirmationMessage: data.confirmation_message,
     allowResponseEditing: Boolean(data.allow_response_editing),
+    settings: (data.settings || {}) as FormSettings,
   };
 }
 
@@ -93,6 +95,7 @@ export async function getResponseForEdit(editKey: string): Promise<ResponseForEd
       requireSignIn: data.form.require_sign_in,
       confirmationMessage: data.form.confirmation_message,
       allowResponseEditing: true,
+      settings: (data.form.settings || {}) as FormSettings,
     },
   };
 }
@@ -174,6 +177,13 @@ export const defaultFillApi: FillApi = { submit: submitResponse, upload: uploadF
 /* Owner Form Management API                                           */
 /* ------------------------------------------------------------------ */
 
+export type QuizSettings = {
+  enabled: boolean;
+  scoringMode: "instant" | "deferred";
+  showCorrectAnswers?: boolean;
+  showFeedback?: boolean;
+};
+
 export type FormSettings = {
   requireSignIn?: boolean;
   oneResponsePerUser?: boolean;
@@ -184,6 +194,7 @@ export type FormSettings = {
   sendRespondentReceipt?: boolean;
   receiptEmailFieldId?: string;
   allowResponseEditing?: boolean;
+  quiz?: QuizSettings;
 };
 
 export type FormRecord = {
