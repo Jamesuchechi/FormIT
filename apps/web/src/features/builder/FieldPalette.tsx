@@ -1,14 +1,16 @@
-import { FIELD_TYPES, type Field, type FieldType } from "@formit/schema";
+import { FIELD_TYPES, type FieldType } from "@formit/schema";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlignLeft,
   ArrowUpDown,
   BookOpen,
+  Calculator,
   Calendar,
   CheckSquare,
   ChevronDown,
   CircleDot,
   Eye,
+  EyeOff,
   FileUp,
   FolderPlus,
   Grid,
@@ -43,6 +45,8 @@ const FIELD_ICONS: Record<FieldType, ReactNode> = {
   matrix: <Grid className="h-4 w-4 text-cyan-500" />,
   ranking: <ArrowUpDown className="h-4 w-4 text-orange-500" />,
   signature: <PenTool className="h-4 w-4 text-violet-500" />,
+  calculated: <Calculator className="h-4 w-4 text-emerald-600" />,
+  hidden: <EyeOff className="h-4 w-4 text-neutral-500" />,
 };
 
 const FIELD_TITLES: Record<FieldType, { name: string; desc: string }> = {
@@ -57,6 +61,8 @@ const FIELD_TITLES: Record<FieldType, { name: string; desc: string }> = {
   matrix: { name: "Grid / Matrix", desc: "Rows and columns table" },
   ranking: { name: "Ranking", desc: "Drag to order items" },
   signature: { name: "Signature", desc: "Digital canvas signature pad" },
+  calculated: { name: "Calculated field", desc: "Dynamic formula from answers" },
+  hidden: { name: "Hidden field", desc: "URL params prefill or metadata" },
 };
 
 export function FieldPalette({ state, actions }: FieldPaletteProps) {

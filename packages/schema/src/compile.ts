@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { computeVisibility, allFields, isAnswered } from "./logic.ts";
+import { computeVisibility, allFields, isAnswered, computeCalculatedFields } from "./logic.ts";
 import { LIMITS, type Field, type FieldOf, type FormSchema } from "./types.ts";
 import { isRealDate } from "./util.ts";
 
@@ -215,6 +215,14 @@ function signature(_f: FieldOf<"signature">): z.ZodType<unknown> {
     .max(500_000, "Signature data exceeds maximum size");
 }
 
+function calculated(_f: FieldOf<"calculated">): z.ZodType<unknown> {
+  return z.union([z.number(), z.string().trim().max(LIMITS.maxShortTextLength)]);
+}
+
+function hidden(_f: FieldOf<"hidden">): z.ZodType<unknown> {
+  return z.string().trim().max(LIMITS.maxShortTextLength);
+}
+
 /** Build the validator for a single field's (non-empty) answer. */
 export function fieldValidator(field: Field): z.ZodType<unknown> {
   switch (field.type) {
@@ -239,6 +247,10 @@ export function fieldValidator(field: Field): z.ZodType<unknown> {
       return ranking(field);
     case "signature":
       return signature(field);
+    case "calculated":
+      return calculated(field);
+    case "hidden":
+      return hidden(field);
     default: {
       const _exhaustive: never = field;
       throw new Error(`Unhandled field type: ${JSON.stringify(_exhaustive)}`);
@@ -266,7 +278,9 @@ export function validateSubmission(form: FormSchema, raw: unknown): SubmissionRe
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     return { success: false, errors: { _form: ["Answers must be an object"] } };
   }
-  const answers = raw as Record<string, unknown>;
+  const rawAnswers = raw as Record<string, unknown>;
+  const calculatedValues = computeCalculatedFields(form, rawAnswers);
+  const answers: Record<string, unknown> = { ...rawAnswers, ...calculatedValues };
   const visibility = computeVisibility(form, answers);
 
   const errors: Record<string, string[]> = {};

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { allFields, gradeQuizSubmission, type Field } from "@formit/schema";
+import { allFields, gradeQuizSubmission } from "@formit/schema";
 import type { FillApi, PublicForm, SubmitExtras } from "../../lib/api.ts";
 import { FieldRenderer } from "./FieldRenderer.tsx";
 import { Turnstile } from "./Turnstile.tsx";

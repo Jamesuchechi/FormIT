@@ -112,8 +112,8 @@ Legend: `[ ]` todo, `[x]` done, `[~]` in progress. Order within a phase is build
 - [x] Version history UI with restore
 - [x] Quiz mode: correct answers, points, instant or deferred scoring, feedback per answer
 - [x] Grid / matrix questions, ranking questions, signature field
-- [ ] Branching to sections ("go to section X based on answer")
-- [ ] Calculated fields and hidden fields (URL params prefill, e.g. `?source=email`)
+- [x] Branching to sections ("go to section X based on answer")
+- [x] Calculated fields and hidden fields (URL params prefill, e.g. `?source=email`)
 - [ ] AI form generation from a prompt or pasted doc
 - [ ] AI results summary: themes in open-ended answers, sentiment, outliers
 - [ ] AI-suggested validation and question cleanup

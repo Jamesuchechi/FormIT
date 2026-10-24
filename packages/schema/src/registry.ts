@@ -139,6 +139,31 @@ export const FIELD_REGISTRY: { [T in FieldType]: RegistryEntry<T> } = {
       penColor: "#0f172a",
     }),
   },
+  calculated: {
+    label: "Calculated field",
+    create: (id) => ({
+      id,
+      type: "calculated",
+      label: "Calculated result",
+      required: false,
+      calculation: {
+        expression: "0",
+        prefix: "",
+        suffix: "",
+        decimals: 2,
+      },
+    }),
+  },
+  hidden: {
+    label: "Hidden field",
+    create: (id) => ({
+      id,
+      type: "hidden",
+      label: "Hidden field",
+      required: false,
+      defaultValue: "",
+    }),
+  },
 };
 
 /** Create a new field of the given type. */

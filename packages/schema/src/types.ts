@@ -16,6 +16,8 @@ export const FIELD_TYPES = [
   "matrix",
   "ranking",
   "signature",
+  "calculated",
+  "hidden",
 ] as const;
 export type FieldType = (typeof FIELD_TYPES)[number];
 
@@ -85,6 +87,7 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
 const optionSchema = z.object({
   id: idSchema,
   label: z.string().trim().min(1).max(300),
+  goToSection: z.string().max(64).optional(),
 });
 export type FieldOption = z.infer<typeof optionSchema>;
 
@@ -244,6 +247,26 @@ const signatureField = z.object({
   backgroundColor: z.string().max(30).optional(),
 });
 
+export const calculatedConfigSchema = z.object({
+  expression: z.string().trim().min(1).max(500),
+  prefix: z.string().max(20).optional(),
+  suffix: z.string().max(20).optional(),
+  decimals: z.number().int().min(0).max(6).default(2).optional(),
+});
+export type CalculatedConfig = z.infer<typeof calculatedConfigSchema>;
+
+const calculatedField = z.object({
+  ...base,
+  type: z.literal("calculated"),
+  calculation: calculatedConfigSchema,
+});
+
+const hiddenField = z.object({
+  ...base,
+  type: z.literal("hidden"),
+  defaultValue: z.string().max(LIMITS.maxShortTextLength).optional(),
+});
+
 export const fieldSchema = z.discriminatedUnion("type", [
   shortText,
   longText,
@@ -256,6 +279,8 @@ export const fieldSchema = z.discriminatedUnion("type", [
   matrixField,
   rankingField,
   signatureField,
+  calculatedField,
+  hiddenField,
 ]);
 export type Field = z.infer<typeof fieldSchema>;
 export type FieldOf<T extends FieldType> = Extract<Field, { type: T }>;
@@ -291,6 +316,7 @@ export const sectionSchema = z.object({
   title: z.string().max(200).optional(),
   description: z.string().max(1_000).optional(),
   fields: z.array(fieldSchema).max(LIMITS.maxFieldsTotal),
+  afterSection: z.string().max(64).optional(),
 });
 export type Section = z.infer<typeof sectionSchema>;
 

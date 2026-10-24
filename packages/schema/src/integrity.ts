@@ -1,4 +1,4 @@
-import { allFields } from "./logic.ts";
+import { allFields, extractFormulaVariables, validateFormulaSyntax } from "./logic.ts";
 import { isChoiceField } from "./registry.ts";
 import { formSchema, LIMITS, type Field, type FormSchema, type Rule } from "./types.ts";
 import { isRealDate } from "./util.ts";
@@ -15,7 +15,10 @@ export type IntegrityCode =
   | "invalid_date"
   | "rule_unknown_field"
   | "rule_forward_reference"
-  | "rule_invalid_option";
+  | "rule_invalid_option"
+  | "rule_unknown_section"
+  | "rule_invalid_section"
+  | "invalid_formula";
 
 export type IntegrityIssue = {
   code: IntegrityCode;
@@ -48,10 +51,45 @@ export function checkIntegrity(form: FormSchema): IntegrityIssue[] {
   }
 
   const sectionIds = new Set<string>();
-  for (const s of form.sections) {
+  const sectionIndex = new Map<string, number>();
+  form.sections.forEach((s, i) => {
     if (sectionIds.has(s.id)) push("duplicate_section_id", `Duplicate section id "${s.id}"`, s.id);
     sectionIds.add(s.id);
-  }
+    sectionIndex.set(s.id, i);
+  });
+
+  // Section branching checks
+  form.sections.forEach((s, sIndex) => {
+    if (s.afterSection) {
+      if (s.afterSection === s.id) {
+        push("rule_invalid_section", `After section target on "${s.id}" cannot point to itself`, s.id);
+      } else if (s.afterSection !== "__submit__" && s.afterSection !== "__next__") {
+        if (!sectionIds.has(s.afterSection)) {
+          push("rule_unknown_section", `After section on "${s.id}" references unknown section "${s.afterSection}"`, s.id);
+        } else if ((sectionIndex.get(s.afterSection) ?? 0) <= sIndex) {
+          push("rule_invalid_section", `After section target on "${s.id}" must point to a later section or submit`, s.id);
+        }
+      }
+    }
+
+    for (const f of s.fields) {
+      if (f.type === "multiple_choice" || f.type === "dropdown") {
+        for (const opt of f.options) {
+          if (opt.goToSection) {
+            if (opt.goToSection === s.id) {
+              push("rule_invalid_section", `Option "${opt.id}" in "${s.id}" cannot branch to its own section`, f.id);
+            } else if (opt.goToSection !== "__submit__" && opt.goToSection !== "__next__") {
+              if (!sectionIds.has(opt.goToSection)) {
+                push("rule_unknown_section", `Option "${opt.id}" in "${s.id}" branches to unknown section "${opt.goToSection}"`, f.id);
+              } else if ((sectionIndex.get(opt.goToSection) ?? 0) <= sIndex) {
+                push("rule_invalid_section", `Option "${opt.id}" in "${s.id}" must branch to a later section or submit`, f.id);
+              }
+            }
+          }
+        }
+      }
+    }
+  });
 
   const position = new Map<string, number>();
   const byId = new Map<string, Field>();
@@ -65,6 +103,26 @@ export function checkIntegrity(form: FormSchema): IntegrityIssue[] {
 
   fields.forEach((f, index) => {
     checkFieldConfig(f, push);
+
+    if (f.type === "calculated") {
+      const check = validateFormulaSyntax(f.calculation.expression);
+      if (!check.valid) {
+        push("invalid_formula", check.error, f.id);
+      } else {
+        for (const varId of extractFormulaVariables(f.calculation.expression)) {
+          const source = byId.get(varId);
+          if (!source) {
+            push("invalid_formula", `Formula references unknown field "${varId}"`, f.id);
+          } else if ((position.get(varId) ?? Infinity) >= index) {
+            push(
+              "invalid_formula",
+              `Formula on "${f.id}" must reference an earlier question ("${varId}" is not earlier)`,
+              f.id,
+            );
+          }
+        }
+      }
+    }
 
     if (!f.visibleIf) return;
     for (const leaf of collectRuleLeaves(f.visibleIf)) {

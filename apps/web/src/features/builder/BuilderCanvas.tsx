@@ -12,7 +12,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Palette, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Palette, Plus, Trash2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { BuilderFieldCard } from "./BuilderFieldCard.tsx";
 import type { BuilderActions, BuilderState } from "./types.ts";
@@ -231,6 +231,40 @@ export function BuilderCanvas({ state, actions }: BuilderCanvasProps) {
                       Add Question
                     </button>
                   )}
+                </div>
+              )}
+
+              {/* Section-level After Section Navigation */}
+              {schema.sections.length > 1 && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-2xs text-xs">
+                  <span className="font-medium text-neutral-700 flex items-center gap-1.5">
+                    <ArrowRight className="h-3.5 w-3.5 text-indigo-600" />
+                    After section {secIdx + 1}
+                  </span>
+                  <select
+                    value={section.afterSection || "__next__"}
+                    disabled={state.isReadOnly}
+                    onChange={(e) =>
+                      actions.updateSection(section.id, {
+                        afterSection: e.target.value === "__next__" ? undefined : e.target.value,
+                      })
+                    }
+                    className="rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs text-neutral-800 outline-none focus:border-indigo-500 cursor-pointer shadow-2xs"
+                  >
+                    <option value="__next__">
+                      {secIdx < schema.sections.length - 1
+                        ? `Continue to next section (Section ${secIdx + 2})`
+                        : "Continue to next section"}
+                    </option>
+                    {schema.sections
+                      .filter((s) => s.id !== section.id)
+                      .map((s, idx) => (
+                        <option key={s.id} value={s.id}>
+                          Go to section {idx + 1}: {s.title || "Untitled"}
+                        </option>
+                      ))}
+                    <option value="__submit__">Submit form</option>
+                  </select>
                 </div>
               )}
             </div>

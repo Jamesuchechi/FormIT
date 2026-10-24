@@ -3,11 +3,13 @@ import {
   AlertCircle,
   Award,
   BookmarkPlus,
+  Calculator,
   Eye,
+  EyeOff,
   FileSpreadsheet,
+  GitBranch,
   Image as ImageIcon,
   Plus,
-  Shuffle,
   Sliders,
   Trash2,
   Upload,
@@ -179,7 +181,7 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
           }`}
         >
           <Zap className="h-3 w-3 text-amber-500" />
-          Logic {field.visibleIf && "•"}
+          Logic {(field.visibleIf || ("options" in field && field.options.some((o) => o.goToSection))) && "•"}
         </button>
         {state.form.settings.quiz?.enabled && (
           <button
@@ -892,6 +894,169 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
               </div>
             )}
 
+            {field.type === "calculated" && (
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-neutral-700 flex items-center gap-1.5">
+                  <Calculator className="h-4 w-4 text-emerald-600" />
+                  Calculation Formula
+                </h4>
+
+                <div>
+                  <label className="text-[11px] text-neutral-600 block mb-1 font-medium">
+                    Mathematical Expression
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={field.calculation.expression}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        calculation: {
+                          ...field.calculation,
+                          expression: e.target.value,
+                        },
+                      } as unknown as Partial<Field>)
+                    }
+                    placeholder="e.g. price * quantity or (score_1 + score_2) / 2"
+                    className="w-full rounded-lg border border-neutral-300 p-2 text-xs font-mono outline-none focus:border-indigo-500 bg-neutral-50/50"
+                  />
+                  <p className="mt-1 text-[10px] text-neutral-500">
+                    Supports: +, -, *, /, %, ^, ( ), SUM(), AVG(), MIN(), MAX(), ROUND(), IF()
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-neutral-600 block mb-1.5 font-medium">
+                    Insert Preceding Question
+                  </label>
+                  {precedingFields.length === 0 ? (
+                    <p className="text-[10px] text-neutral-400 italic">No preceding questions yet.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1.5 border border-neutral-200 rounded-lg bg-neutral-50/50">
+                      {precedingFields.map((pf) => (
+                        <button
+                          key={pf.id}
+                          type="button"
+                          onClick={() => {
+                            const cur = field.calculation.expression.trim();
+                            const expr = cur && cur !== "0" ? `${cur} + ${pf.id}` : pf.id;
+                            actions.updateField(sectionId, field.id, {
+                              calculation: {
+                                ...field.calculation,
+                                expression: expr,
+                              },
+                            } as unknown as Partial<Field>);
+                          }}
+                          className="text-[10px] font-mono bg-white hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 border border-neutral-200 px-2 py-0.5 rounded cursor-pointer transition-colors shadow-2xs"
+                          title={pf.label}
+                        >
+                          +{pf.id}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-[10px] text-neutral-600 block mb-1">Prefix</label>
+                    <input
+                      type="text"
+                      value={field.calculation.prefix ?? ""}
+                      onChange={(e) =>
+                        actions.updateField(sectionId, field.id, {
+                          calculation: {
+                            ...field.calculation,
+                            prefix: e.target.value,
+                          },
+                        } as unknown as Partial<Field>)
+                      }
+                      placeholder="$"
+                      className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-600 block mb-1">Suffix</label>
+                    <input
+                      type="text"
+                      value={field.calculation.suffix ?? ""}
+                      onChange={(e) =>
+                        actions.updateField(sectionId, field.id, {
+                          calculation: {
+                            ...field.calculation,
+                            suffix: e.target.value,
+                          },
+                        } as unknown as Partial<Field>)
+                      }
+                      placeholder=" USD"
+                      className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-600 block mb-1">Decimals</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={6}
+                      value={field.calculation.decimals ?? 2}
+                      onChange={(e) =>
+                        actions.updateField(sectionId, field.id, {
+                          calculation: {
+                            ...field.calculation,
+                            decimals: Math.max(0, Math.min(6, parseInt(e.target.value, 10) || 0)),
+                          },
+                        } as unknown as Partial<Field>)
+                      }
+                      className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {field.type === "hidden" && (
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-neutral-700 flex items-center gap-1.5">
+                  <EyeOff className="h-4 w-4 text-neutral-500" />
+                  Hidden Field & URL Prefill Settings
+                </h4>
+
+                <div>
+                  <label className="text-[11px] text-neutral-600 block mb-1 font-medium">
+                    Field ID / URL Param Key
+                  </label>
+                  <input
+                    type="text"
+                    value={field.id}
+                    disabled
+                    className="w-full rounded border border-neutral-200 bg-neutral-100 px-2.5 py-1.5 text-xs font-mono text-neutral-600"
+                  />
+                  <p className="mt-1 text-[10px] text-neutral-500">
+                    Prefill by appending <code className="font-mono text-neutral-700 font-semibold">?{field.id}=value</code> to the form URL.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-neutral-600 block mb-1 font-medium">
+                    Default Fallback Value
+                  </label>
+                  <input
+                    type="text"
+                    value={field.defaultValue ?? ""}
+                    onChange={(e) =>
+                      actions.updateField(sectionId, field.id, {
+                        defaultValue: e.target.value,
+                      } as unknown as Partial<Field>)
+                    }
+                    placeholder="e.g. email or referral"
+                    className="w-full rounded border border-neutral-300 px-2.5 py-1.5 text-xs"
+                  />
+                  <p className="mt-1 text-[10px] text-neutral-500">
+                    Used if no matching URL query parameter is supplied by respondent.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="pt-4 border-t border-neutral-200">
               <button
                 type="button"
@@ -1216,6 +1381,58 @@ export function FieldInspector({ state, actions }: FieldInspectorProps) {
                 )}
               </div>
             )}
+
+            {/* Section Branching ("Go to section based on answer") */}
+            {(field.type === "multiple_choice" || field.type === "dropdown") &&
+              state.schema.sections.length > 1 && (
+                <div className="pt-5 border-t border-neutral-200 space-y-3">
+                  <div className="flex items-center gap-1.5">
+                    <GitBranch className="h-4 w-4 text-indigo-600" />
+                    <h4 className="text-xs font-semibold text-neutral-900">
+                      Section Branching
+                    </h4>
+                  </div>
+                  <p className="text-[10px] text-neutral-500 leading-relaxed">
+                    Direct respondents to specific sections or submit early based on the answer selected.
+                  </p>
+
+                  <div className="space-y-2 pt-1">
+                    {field.options.map((opt) => (
+                      <div
+                        key={opt.id}
+                        className="rounded-lg border border-neutral-200 bg-neutral-50/70 p-2.5 text-xs space-y-1"
+                      >
+                        <div className="font-medium text-neutral-800 truncate text-[11px]">
+                          {opt.label}
+                        </div>
+                        <select
+                          value={opt.goToSection || "__next__"}
+                          onChange={(e) => {
+                            const val = e.target.value === "__next__" ? undefined : e.target.value;
+                            const newOptions = field.options.map((o) =>
+                              o.id === opt.id ? { ...o, goToSection: val } : o,
+                            );
+                            actions.updateField(sectionId, field.id, {
+                              options: newOptions,
+                            } as unknown as Partial<Field>);
+                          }}
+                          className="w-full rounded border border-neutral-300 bg-white px-2 py-1 text-xs cursor-pointer outline-none focus:border-indigo-500"
+                        >
+                          <option value="__next__">Continue to next section</option>
+                          {state.schema.sections
+                            .filter((s) => s.id !== sectionId)
+                            .map((s, idx) => (
+                              <option key={s.id} value={s.id}>
+                                Go to section {idx + 1}: {s.title || "Untitled"}
+                              </option>
+                            ))}
+                          <option value="__submit__">Submit form</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
           </div>
         )}
       </div>

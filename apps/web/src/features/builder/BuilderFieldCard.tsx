@@ -7,11 +7,12 @@ import {
   Award,
   BookmarkPlus,
   Calendar,
+  Calculator,
   Copy,
+  EyeOff,
   FileSpreadsheet,
-  Grid,
+  GitBranch,
   GripVertical,
-  Image as ImageIcon,
   MessageSquare,
   PenTool,
   Plus,
@@ -355,6 +356,12 @@ export function BuilderFieldCard({
                     className="flex-1 bg-transparent text-xs text-neutral-900 outline-none"
                     placeholder={`Option ${idx + 1}`}
                   />
+                  {option.goToSection && (
+                    <span className="flex items-center gap-1 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full">
+                      <GitBranch className="h-2.5 w-2.5" />
+                      {option.goToSection === "__submit__" ? "Submit" : `→ ${option.goToSection}`}
+                    </span>
+                  )}
                   {field.options.length > 1 && (
                     <button
                       type="button"
@@ -561,6 +568,12 @@ export function BuilderFieldCard({
                     className="flex-1 bg-transparent text-xs text-neutral-900 outline-none"
                     placeholder={`Option ${idx + 1}`}
                   />
+                  {option.goToSection && (
+                    <span className="flex items-center gap-1 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full">
+                      <GitBranch className="h-2.5 w-2.5" />
+                      {option.goToSection === "__submit__" ? "Submit" : `→ ${option.goToSection}`}
+                    </span>
+                  )}
                   {field.options.length > 1 && (
                     <button
                       type="button"
@@ -747,6 +760,56 @@ export function BuilderFieldCard({
             <span className="font-medium text-neutral-600">Signature area</span>
             <div className="mt-4 w-48 border-b-2 border-neutral-300"></div>
             <span className="text-[10px] text-neutral-400 mt-1">Respondent signs on touchscreen or mouse</span>
+          </div>
+        )}
+
+        {/* Calculated Field */}
+        {field.type === "calculated" && (
+          <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/30 p-4 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-indigo-600" />
+                <span className="font-semibold text-indigo-950">Calculated Question</span>
+              </div>
+              <span className="font-mono text-xs bg-white text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-200 font-bold">
+                {field.calculation.prefix || ""}{field.calculation.expression || "0"}{field.calculation.suffix || ""}
+              </span>
+            </div>
+            <p className="text-[11px] text-neutral-500">
+              Formula: <code className="font-mono text-neutral-700 bg-white/80 px-1.5 py-0.5 rounded border border-neutral-200/60">{field.calculation.expression || "0"}</code>
+            </p>
+          </div>
+        )}
+
+        {/* Hidden Field */}
+        {field.type === "hidden" && (
+          <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50/70 p-4 text-xs text-neutral-600 space-y-2">
+            <div className="flex items-center gap-2">
+              <EyeOff className="h-4 w-4 text-neutral-400" />
+              <span className="font-semibold text-neutral-800">Hidden Question (Not visible to respondents)</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-neutral-600">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-neutral-400 block">URL Parameter / Field ID</span>
+                <code className="font-mono text-xs bg-white px-2 py-0.5 rounded border border-neutral-200 mt-0.5 inline-block">
+                  ?{field.id}=...
+                </code>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-neutral-400 block">Default Fallback Value</span>
+                <span className="text-xs text-neutral-700 italic">
+                  {field.defaultValue ? `"${field.defaultValue}"` : "(none)"}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Branching Logic Badge */}
+        {"options" in field && field.options.some((o) => o.goToSection) && (
+          <div className="mt-3 mr-2 inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-medium text-indigo-800">
+            <GitBranch className="h-3 w-3 text-indigo-500" />
+            Branching logic enabled
           </div>
         )}
 

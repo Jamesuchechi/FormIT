@@ -1,4 +1,4 @@
-import type { Field, FileAnswer } from "@formit/schema";
+import type { Field, FieldOf, FileAnswer } from "@formit/schema";
 import { CheckboxesInput, DropdownInput, MultipleChoiceInput } from "./fields/ChoiceFields.tsx";
 import { FileInput } from "./fields/FileField.tsx";
 import { MatrixInput } from "./fields/MatrixField.tsx";
@@ -17,9 +17,19 @@ type Props = {
 };
 
 /** Types that render several controls, so they get a fieldset/legend instead of label/for. */
-const GROUP_TYPES = new Set<Field["type"]>(["multiple_choice", "checkboxes", "linear_scale", "matrix", "ranking"]);
+const GROUP_TYPES = new Set<Field["type"]>([
+  "multiple_choice",
+  "checkboxes",
+  "linear_scale",
+  "matrix",
+  "ranking",
+]);
 
 export function FieldRenderer({ field, value, errors, onChange, onUpload }: Props) {
+  if (field.type === "hidden") {
+    return <input type="hidden" id={`in-${field.id}`} name={field.id} value={String(value ?? "")} />;
+  }
+
   const invalid = !!errors?.length;
   const helpId = `help-${field.id}`;
   const errorId = `err-${field.id}`;
@@ -122,9 +132,44 @@ function renderInput(
       return <RankingInput field={field} value={value} onChange={onChange} ctl={ctl} />;
     case "signature":
       return <SignatureInput field={field} value={value} onChange={onChange} ctl={ctl} />;
+    case "calculated":
+      return <CalculatedInput field={field} value={value} />;
+    case "hidden":
+      return null;
     default: {
       const _exhaustive: never = field;
       throw new Error(`Unhandled field type: ${JSON.stringify(_exhaustive)}`);
     }
   }
+}
+
+function CalculatedInput({ field, value }: { field: FieldOf<"calculated">; value: unknown }) {
+  const num = typeof value === "number" ? value : Number(value);
+  const formatted = Number.isFinite(num)
+    ? num.toLocaleString(undefined, {
+        minimumFractionDigits: field.calculation.decimals ?? 0,
+        maximumFractionDigits: field.calculation.decimals ?? 2,
+      })
+    : "—";
+
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 px-4 py-3 text-neutral-900 dark:text-neutral-100">
+      <div className="font-mono text-xl sm:text-2xl font-bold tracking-tight">
+        {field.calculation.prefix && (
+          <span className="text-neutral-400 dark:text-neutral-500 mr-1 text-lg font-medium">
+            {field.calculation.prefix}
+          </span>
+        )}
+        <span>{formatted}</span>
+        {field.calculation.suffix && (
+          <span className="text-neutral-400 dark:text-neutral-500 ml-1.5 text-sm font-medium">
+            {field.calculation.suffix}
+          </span>
+        )}
+      </div>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800/40 px-2 py-0.5 rounded">
+        Calculated
+      </span>
+    </div>
+  );
 }
